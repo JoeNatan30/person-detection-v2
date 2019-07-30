@@ -21,14 +21,23 @@ def main(proceso):
         procesos.lectura_(cant_PCD)
     
     elif proceso == "procesamiento_total":
-        procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,version,max_proces_paral,pos_proces_paral)
-        procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,version,max_proces_paral,pos_proces_paral)
+        procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,
+                                     version,max_proces_paral,
+                                     pos_proces_paral)
+        
+        procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,
+                                    version,max_proces_paral,
+                                    pos_proces_paral)
 
     elif proceso == "procesamiento_train":
-        procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,version,max_proces_paral,pos_proces_paral)
+        procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,
+                                     version,max_proces_paral,
+                                     pos_proces_paral)
         
     elif proceso == "procesamiento_real":
-        procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,version,max_proces_paral,pos_proces_paral)
+        procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,
+                                    version,max_proces_paral,
+                                    pos_proces_paral)
 
     elif proceso == "entrenamiento":
         procesos.entrenamiento(cant_PCD,porcentaje,algoritmo)
