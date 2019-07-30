@@ -1,8 +1,7 @@
 #from lectura import lectura_de_kinect as lk
 #from lectura import lectura_xml
-from eliminacion_de_ruido import estructura
-from eliminacion_de_ruido import eliminar_ruido
-from segmentacion import algoritmo_ransac
+from NoiseReduction import ReduceNoise, KdtreeStructure
+from Segmentation import RansacAlgorithm
 from caracterizacion import fpfh, descriptor, procesados
 from algoritmos import cross_validation
 from algoritmos import svm, neural_network, random_forest
@@ -21,20 +20,17 @@ def lectura_(cant_PCD):
 ###############################################################################
 def segmento(pos,pc,kdtree,v):
     
-    pc_sin_seg, kdtree_sin_seg = algoritmo_ransac.iniciar(pc,kdtree,v)
+    pc_sin_seg, kdtree_sin_seg = RansacAlgorithm.iniciar(pc,kdtree,v)
     #pc_sin_seg.to_file('data/entrenamiento/segmentado2/segmentado_%d.pcd'%(pos))
-    #pc, kdtree = estructura.obtencion_pointCloud_Kdtree('data/entrenamiento/segmentado2/segmentado_%d.pcd'%(pos))
+    #pc, kdtree = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado2/segmentado_%d.pcd'%(pos))
 
-    pc_sin_out = eliminar_ruido.sin_puntos_lejanos_distancias(pc_sin_seg,
-                                                              kdtree_sin_seg,v)
+    pc_sin_out = ReduceNoise.reduceDistancePoint(pc_sin_seg,kdtree_sin_seg,v)
 
-    kdtree_sin_out = estructura.obtencion_kdtree_from_pointCloud(pc_sin_out)
+    kdtree_sin_out = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out)
     #
-    pc_sin_out2 = eliminar_ruido.sin_puntos_lejanos_distancias(pc_sin_out,
-                                                               kdtree_sin_out,
-                                                               v)
+    pc_sin_out2 = ReduceNoise.reduceDistancePoint(pc_sin_out,kdtree_sin_out,v)
     
-    kdtree_sin_out2 = estructura.obtencion_kdtree_from_pointCloud(pc_sin_out2)
+    kdtree_sin_out2 = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out2)
     #
     #pc_sin_out2.to_file('data/entrenamiento/segmentado/segmentado_%d.pcd'%(pos))
     
@@ -42,7 +38,7 @@ def segmento(pos,pc,kdtree,v):
 
 ###############################################################################
 def histograma(pc,kdtree):
-    #pc_seg, kdtree_seg = estructura.obtencion_pointCloud_Kdtree('data/entrenamiento/segmentado/segmentado_%d.pcd'%(pos))
+    #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%(pos))
         
     list_fpfh_point = fpfh.inicio(pc,kdtree)
 
@@ -89,7 +85,7 @@ def procesamiento_train(cant_PCD, porcentaje,tamano,version,max_paral,pos_paral)
             print (pos)
             
             #Ruido
-            pc_sin_ruido, kdtree_sin_ruido = eliminar_ruido.ruido(pos)
+            pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(pos)
             print ("fin sin ruido")
             
             #segmentacion        
@@ -97,7 +93,7 @@ def procesamiento_train(cant_PCD, porcentaje,tamano,version,max_paral,pos_paral)
             print ("fin Segmentacion")
             
             #FPFH
-            #pc_seg, kdtree_seg = estructura.obtencion_pointCloud_Kdtree('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
+            #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
             fpfh_list = histograma(pc_seg, kdtree_seg)
             
             #Descriptor
@@ -121,13 +117,13 @@ def procesamiento_real(cant_PCD, porcentaje,tamano,version,max_paral,pos_paral):
             print (pos)
             
             #Ruido
-            pc_sin_ruido, kdtree_sin_ruido = eliminar_ruido.ruido(pos)
+            pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(pos)
             
             #segmentacion        
             pc_seg, kdtree_seg = segmento(pos,pc_sin_ruido, kdtree_sin_ruido,version)
             
             #FPFH
-            #pc_seg, kdtree_seg = estructura.obtencion_pointCloud_Kdtree('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
+            #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
             fpfh_list = histograma(pc_seg, kdtree_seg)
             
             #Descriptor
