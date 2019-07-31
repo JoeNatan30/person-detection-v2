@@ -49,13 +49,12 @@ def estimationOfNormals(pc_array,punto_cercano, cantidad):
     cont = 0
     
     for j in range(cantidad):
+        #Para no tomar el primer valor que es del mismo punto
         if j > 0:
-            for k in range(cantidad - j):
-               
-                k_temp = k + j + 1
+            if j < cantidad - 1:
                 
                 normal_intermedia = computeNormal(pc_array,punto_cercano,
-                                                    j,k_temp)
+                                                    j,j+1)
            
                 suma_normal = suma_normal + normal_intermedia
                 

@@ -2,7 +2,7 @@
 #from lectura import lectura_xml
 from NoiseReduction import ReduceNoise, KdtreeStructure
 from Segmentation import RansacAlgorithm
-from caracterizacion import fpfh, descriptor, procesados
+from Characterization import Fpfh, Descriptor, Procesados
 from algoritmos import cross_validation
 from algoritmos import svm, neural_network, random_forest
 
