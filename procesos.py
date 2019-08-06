@@ -3,8 +3,8 @@
 from NoiseReduction import ReduceNoise, KdtreeStructure
 from Segmentation import RansacAlgorithm
 from Characterization import Fpfh, Descriptor, Procesados
-from algoritmos import cross_validation
-from algoritmos import svm, neural_network, random_forest
+from Algorithms import CrossValidation
+from Algorithms import Svm, NeuralNetwork, RandomForest
 
 import time
 import pandas as pd
@@ -40,21 +40,21 @@ def segmento(pos,pc,kdtree,v):
 def histograma(pc,kdtree):
     #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%(pos))
         
-    list_fpfh_point = fpfh.inicio(pc,kdtree)
+    list_fpfh_point = Fpfh.inicio(pc,kdtree)
 
     return list_fpfh_point
 
 ###############################################################################
 def descripcion(fpfh,tamano, pc):
 
-    conj_fpfh, conj_ind, conj_extr = descriptor.inicio(fpfh, pc, tamano)
+    conj_fpfh, conj_ind, conj_extr = Descriptor.inicio(fpfh, pc, tamano)
     
     return conj_fpfh, conj_ind, conj_extr
 
 ###############################################################################
 def descripcion_train(pos,tamano, fpfh,pc, kdtree):
     
-    dataset_X, dataset_Y, conj_extre= descriptor.obtener_descriptores_train(pos,fpfh,pc, kdtree,
+    dataset_X, dataset_Y, conj_extre= Descriptor.obtener_descriptores_train(pos,fpfh,pc, kdtree,
                                                          tamano)
     return dataset_X, dataset_Y, conj_extre
 
@@ -135,75 +135,75 @@ def procesamiento_real(cant_PCD, porcentaje,tamano,version,max_paral,pos_paral):
 ###############################################################################
 def entrenamiento(cant,porcentaje,algoritmo):
 
-    data_x, data_y = procesados.entrenamiento(cant,porcentaje)
+    data_x, data_y = Procesados.entrenamiento(cant,porcentaje)
     
     start_time = time.time()
 
     if algoritmo == "svm":
         
         print ("inicio entrenamiento SVM")
-        svm.entrenar(data_x,data_y)
+        Svm.entrenar(data_x,data_y)
         print ("SVM entrenado",("--- %s seconds ---" % (time.time() - start_time)))
         
     elif algoritmo == "rn":
         
         print ("inicio entrenamiento redes neuronales")
-        neural_network.entrenar(data_x,data_y)
+        NeuralNetwork.entrenar(data_x,data_y)
         print ("Redes Neuronales entrenado", ("--- %s seconds ---" % (time.time() - start_time)))
         
     elif algoritmo == "rf":
         
         print ("inicio Random Forest")
-        random_forest.entrenar(data_x,data_y)
+        RandomForest.entrenar(data_x,data_y)
         print ("Random Forest entrenado", ("--- %s seconds ---" % (time.time() - start_time)))
         
 ###############################################################################
 def validacion_cruzada(cant,porcentaje,algoritmo):
     
-    data_x , data_y = procesados.prueba(cant,porcentaje)
+    data_x , data_y = Procesados.prueba(cant,porcentaje)
     
     start_time = time.time()
     
     if algoritmo == "svm":
         
         print ("inicio cross validation SVM")
-        cross_validation.optimize_svc(data_x,data_y)
+        CrossValidation.optimize_svc(data_x,data_y)
         print ("fin cross validation SVM", ("--- %s seconds ---" % (time.time() - start_time)))
         
     elif algoritmo == "rn":
         
         print ("inicio cross validation Redes Neuronales")
-        cross_validation.optimize_nn(data_x,data_y)
+        CrossValidation.optimize_nn(data_x,data_y)
 
         print ("fin cross validation Redes Neuronales",("--- %s seconds ---" % (time.time() - start_time)))
         
     elif algoritmo == "rf":
         
         print ("inicio cross validation Forest")
-        cross_validation.optimize_rfc(data_x,data_y)
+        CrossValidation.optimize_rfc(data_x,data_y)
         print ("fin cross validation Random Forest", ("--- %s seconds ---" % (time.time() - start_time)))
         
 ###############################################################################    
 def prueba(cant,porcentaje,algoritmo):
     
-    data_x , data_y = procesados.prueba(cant,porcentaje)
+    data_x , data_y = Procesados.prueba(cant,porcentaje)
     
     start_time = time.time()
     
     if algoritmo == "svm":
         
         print ("inicio prediccion SVM")
-        svm.predecir(data_x,data_y)
+        Svm.predecir(data_x,data_y)
         print ("fin prediccion SVM", ("--- %s seconds ---" % (time.time() - start_time)))
         
     elif algoritmo == "rn":
         
         print ("inicio prediccion Redes Neuronales")
-        neural_network.predecir(data_x,data_y)
+        NeuralNetwork.predecir(data_x,data_y)
         print ("fin prediccion Redes Neuronales", ("--- %s seconds ---" % (time.time() - start_time)))
         
     elif algoritmo == "rf":
         
         print ("inicio Random Forest")
-        random_forest.predecir(data_x,data_y)
+        RandomForest.predecir(data_x,data_y)
         print ("fin prediccion Random Forest", ("--- %s seconds ---" % (time.time() - start_time)))
