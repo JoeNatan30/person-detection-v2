@@ -9,7 +9,7 @@ import pandas as pd
 #import matplotlib.pyplot as plt
 #from matplotlib import style
 #style.use("ggplot")
-from sklearn_evaluation import plot
+#from sklearn_evaluation import plot
 
 def inicio_ejemplo(var):
     X = np.array([[1, 2, 2, 3], 
@@ -76,7 +76,7 @@ def predecir(X_test, y_test):
     
     #plot.precision_recall(y_true, y_score)
     
-    plot.confusion_matrix(y_true, y_pred)
+    #plot.confusion_matrix(y_true, y_pred)
     #print
     #plot.precision_recall(y_true, y_score)
     #print

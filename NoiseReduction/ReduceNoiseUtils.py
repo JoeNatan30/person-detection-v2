@@ -93,7 +93,7 @@ def directionOfNormals(pc,kdtree):
             normales.append(normalDirection)
         else:
             
-            normales.apprend(np.zeros(3))
+            normales.append(np.zeros(3))
 
     normalsArray = np.asarray(normales)
     return normalsArray, normalIndex

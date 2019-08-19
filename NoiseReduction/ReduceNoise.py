@@ -5,6 +5,7 @@ Created on Sun Sep  2 19:32:51 2018
 
 @author: joe
 """
+import pcl
 import math
 import numpy as np
 
@@ -103,7 +104,7 @@ def getNotSimilarNormals(direccion_normal,pos):
     if isOutOfRange(direction_1,direction_2):
         return True
     #if a normal with the oposite direction normal are out of range
-    if isOutOfRange*(direction_1,direction_2 * -1):
+    if isOutOfRange(direction_1,direction_2 * -1):
         return True
     else:
         return False
@@ -128,7 +129,8 @@ def init(pc,kdtree):
     
     #Obtener las normales  y sus indices
     normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormals(pc,kdtree)
-    #el nuevo Point cloud sin planos
+    
+    #El nuevo Point cloud sin planos
     pcWithoutFlatPart= removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex)
     
     kdtreeWithoutFlatPart = KdtreeStructure.getKdtreeFromPointCloud(pcWithoutFlatPart)
@@ -150,8 +152,8 @@ def init(pc,kdtree):
     
 def ruido(pos):
 
-    readDir = 'data/entrenamiento/inicial/inicial_%d.pcd'% pos
-    writeDir = 'data/entrenamiento/sin_ruido/sin_ruido_%d.pcd'% pos
+    readDir = '../inicial/inicial_%d.pcd'% pos
+    writeDir = './sin_ruido_%d.pcd'% pos
     
     #Lectura
     pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
@@ -160,7 +162,7 @@ def ruido(pos):
     cleansedPc, cleansedKdtree = init(pc,kdtree)
     
     #Escritura
-    cleansedPc.to_file(writeDir)
+    cleansedPc.to_file(str.encode(writeDir))
     
     return cleansedPc, cleansedKdtree
 ###############################################################################

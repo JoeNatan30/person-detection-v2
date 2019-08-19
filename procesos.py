@@ -95,10 +95,10 @@ def procesamiento_train(cant_PCD, porcentaje,tamano,version,max_paral,pos_paral)
             #FPFH
             #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
             fpfh_list = histograma(pc_seg, kdtree_seg)
-            
+            print ("fin histograma")
             #Descriptor
             dataset_X, dataset_Y, conj_extre = descripcion_train(pos,tamano,fpfh_list,pc_seg,kdtree_seg)
-            
+            print ("fin description")
             #Guardado
             guardar_datos_procesados(pos,dataset_X,dataset_Y)
    

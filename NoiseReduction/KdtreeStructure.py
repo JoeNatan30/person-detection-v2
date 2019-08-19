@@ -1,10 +1,27 @@
 import pcl
 import math
 import numpy as np
-  
+
+
+###############################################################################
+# FUNCION INICIAL GENERAL
+    
+def getKdtreeFromPointCloudDir(direccion):
+    
+    rawPc = getPointCloudFromDir(direccion)
+
+    pc = erraseEmptyCoords(rawPc)
+
+    kdtree = getKdtreeFromPointCloud(pc)
+    
+
+    return pc, kdtree
+
+
+###############################################################################
 #inicializa una pointCloud
 def inicializar_pointCloud():
-    return pcl.PointCloud()
+    return pcl._pcl.PointCloud()
 
 ###############################################################################
 # OBTENER POINT CLOUD (PC)
@@ -13,17 +30,16 @@ def inicializar_pointCloud():
 #lee un archivo PCD y lo introduce a un PointCloud
     #pc = point cloud inicializado
     #direccion = direccion del archivo
-def readPCDFile(pc,direccion):
-    pc.from_file(direccion)
+def readPCDFile(direccion):
 
+    return pcl.load(direccion)
+    
 #se obtiene el pointCloud de la direccion otorgada
     #direccion = direccion del archivo
 def getPointCloudFromDir(direccion):
-    
-    pc = inicializar_pointCloud()
-    
-    readPCDFile(pc,direccion)
-    
+
+    pc = readPCDFile(direccion)
+        
     return pc
 
 ###############################################################################
@@ -32,20 +48,9 @@ def getPointCloudFromDir(direccion):
 #Se obtiene un kdtree a partir de un pointCloud
     #pc = Point cloud
 def getKdtreeFromPointCloud(pc):
-    return pcl.KdTreeFLANN(pc)
+    
+    return pc.make_kdtree_flann()
 
-###############################################################################
-# FUNCION INICIAL GENERAL
-    
-def getKdtreeFromPointCloudDir(direccion):
-    
-    rawPc = getPointCloudFromDir(direccion)
-    
-    pc = erraseEmptyCoords(rawPc)
-    
-    kdtree = getKdtreeFromPointCloud(pc)
-    
-    return pc, kdtree
 
 ###############################################################################
     
@@ -103,17 +108,17 @@ def obtencion_pointCloud_escena(num,direccion):
 
 ###############################################################################
 def erraseEmptyCoords(pc):
-    
+
     pcArray = pc.to_array()
     
     notEmptyPoints = []
-    
+   
     for pos in range(pc.size):
         
         if not math.isnan(pcArray[pos][0]):
-            
-            notEmptyPoints.append(pcArray[pos])
+       
+            notEmptyPoints.append(pos)
     
     pcArray =  np.asarray(notEmptyPoints)
-    
-    return pcl.from_array(pcArray)
+
+    return pc.extract(notEmptyPoints)
