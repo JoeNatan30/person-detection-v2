@@ -5,7 +5,6 @@ Created on Sun Sep  2 19:32:51 2018
 
 @author: joe
 """
-import pcl
 import math
 import numpy as np
 
@@ -125,14 +124,17 @@ def removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex):
     return newPc
 
 
-def init(pc,kdtree):
+def init(pc,kdtree,verbose):
     
     #Obtener las normales  y sus indices
+    if (verbose): print ("ReduceNoiseUtils.directionOfNormals")
     normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormals(pc,kdtree)
     
     #El nuevo Point cloud sin planos
+    if (verbose): print ("removeSimilarPointsUsingNormals")
     pcWithoutFlatPart= removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex)
     
+    if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
     kdtreeWithoutFlatPart = KdtreeStructure.getKdtreeFromPointCloud(pcWithoutFlatPart)
 
     
@@ -150,18 +152,21 @@ def init(pc,kdtree):
 ###############################################################################
 #Aquí va las direcciones de lectura y escritura
     
-def ruido(pos):
+def ruido(pos,verbose):
 
     readDir = '../inicial/inicial_%d.pcd'% pos
     writeDir = './sin_ruido_%d.pcd'% pos
     
     #Lectura
+    if (verbose): print ("READ")
     pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
     
     #Proceso
-    cleansedPc, cleansedKdtree = init(pc,kdtree)
+    if (verbose): print ("PROCESS")
+    cleansedPc, cleansedKdtree = init(pc,kdtree,verbose)
     
     #Escritura
+    if (verbose): print ("WRITE")
     cleansedPc.to_file(str.encode(writeDir))
     
     return cleansedPc, cleansedKdtree

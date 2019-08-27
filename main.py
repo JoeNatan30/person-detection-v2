@@ -16,6 +16,7 @@ def main(proceso):
     version = 1             # version del kinect
     max_proces_paral = 4    # Maximo de procesos paralelos (se cuenta desde cero)
     pos_proces_paral = 0    # posicion de procesos paralelos (debe inicar en cero)
+    verbose = True          # to have more detail of the process
     
     if proceso == "captura":
         procesos.lectura_(cant_PCD)
@@ -23,31 +24,31 @@ def main(proceso):
     elif proceso == "procesamiento_total":
         procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,
                                      version,max_proces_paral,
-                                     pos_proces_paral)
+                                     pos_proces_paral,verbose)
         
         procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,
                                     version,max_proces_paral,
-                                    pos_proces_paral)
+                                    pos_proces_paral,verbose)
 
     elif proceso == "procesamiento_train":
         procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,
                                      version,max_proces_paral,
-                                     pos_proces_paral)
+                                     pos_proces_paral,verbose)
         
     elif proceso == "procesamiento_real":
         procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,
                                     version,max_proces_paral,
-                                    pos_proces_paral)
+                                    pos_proces_paral,verbose)
 
     elif proceso == "entrenamiento":
-        procesos.entrenamiento(cant_PCD,porcentaje,algoritmo)
+        procesos.entrenamiento(cant_PCD,porcentaje,algoritmo,verbose)
         
     elif proceso == "validacion_cruzada":
-        procesos.validacion_cruzada(cant_PCD,porcentaje,algoritmo)
+        procesos.validacion_cruzada(cant_PCD,porcentaje,algoritmo,verbose)
     
     elif proceso == "prueba":
-        procesos.prueba(cant_PCD,porcentaje,algoritmo)
-
+        procesos.prueba(cant_PCD,porcentaje,algoritmo,verbose)
+        
     else:
         print ("opciones:")
         print ("captura -> Solo captura desde kinet v2")

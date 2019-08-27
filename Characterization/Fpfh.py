@@ -17,6 +17,7 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
     
     pc_arr = pc.to_array()
     
+    print  (pc_arr)
     spfhPoint = []
 
     theta_comp_1 = 0.0
@@ -164,6 +165,8 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
         list_fpfh.append(fpfh)
         
         print (fpfh)
+        print ("Este es el valor, GG")
+        print (fpfh)
     #Se retorna la lista fpfh y su respectivo indice en la nube de puntos
     return np.array(list_fpfh)
 
@@ -171,15 +174,17 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
 ###############################################################################
 #MAIN
 ###############################################################################
-def inicio(pc,kdtree):
+def inicio(pc, kdtree, verbose):
 
     cantidad = 20 #puntos (salen 2 normales menos al valor indicado en cantidad)
   
+    if (verbose): print ("normal.getNormalDirection")
     normalArr, normalIndex = normal.getNormalDirection(pc,kdtree,cantidad)
-
+    
+    if (verbose): print ("SPFH")
     listSpfhPoint, numPoints = spfh(pc, kdtree, normalArr, len(normalIndex),
                                           cantidad)
-    
+    if (verbose): print ("FPFH")
     list_point_fpfh = fpfh(pc, kdtree, listSpfhPoint, numPoints, cantidad)
 
     return list_point_fpfh

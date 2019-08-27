@@ -163,7 +163,7 @@ def leer_xml(pos):
     
     base_path = os.path.dirname(os.path.realpath(__file__))
     
-    xml_file = os.path.join(base_path,'../data/entrenamiento/Skeleton/Skeleton %d.xml'%pos)
+    xml_file = os.path.join(base_path,'../../skeleton/Skeleton %d.xml'%pos)
     
     tree = et.parse(xml_file)
     
@@ -389,10 +389,13 @@ def getDescriptorSet(fpfhSet, pc, tamano_pc, NumPoints):
     return pointSet, indexSet, extremSet
 
 ###############################################################################
-def inicio(fpfhSet, pc, NumPoints):
-        
+def inicio(fpfhSet, pc, NumPoints, verbose):
+    
+    if (verbose): print ("getDescriptorSet")
     fpfhSet, indexSet ,extremSet= getDescriptorSet(fpfhSet,
-                                                   pc, pc.size, NumPoints)
+                                                   pc,
+                                                   pc.size, 
+                                                   NumPoints)
     
     return fpfhSet, indexSet, extremSet
 
