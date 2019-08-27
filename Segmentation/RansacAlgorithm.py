@@ -1,6 +1,5 @@
-import pcl
 import numpy as np
-
+import math
 
 from Segmentation import RansacUtils
 
@@ -50,7 +49,6 @@ def isWithinVolume(pc_arr,pos,f_x,rango):
     A_x0 = f_x[0]*punto[0] #A_X * p_0
     B_y0 = f_x[1]*punto[1] #B_Y * p_1
     C_z0 = f_x[2]*punto[2] #C_Z * p_2
-    
 
     D = f_x[3]
     
@@ -62,12 +60,11 @@ def isWithinVolume(pc_arr,pos,f_x,rango):
     if divisor == 0:
         divisor = 0.000000000001
     
-    distancia_cuadrada = dividendo**2 / divisor
+    distancia_cuadrada = dividendo / (divisor**(1/2))
 
-    
-    if distancia_cuadrada < rango:  
+    if float(distancia_cuadrada) <  float(rango):
         return True
-    else: 
+    else:
         return False
 
 ###############################################################################
@@ -112,8 +109,8 @@ def getFunctionOfPlane(pc,pc_arr,listOfPoints,kdtree):
     punto_1 = pc_arr[listOfPoints[0]]
     punto_2 = pc_arr[listOfPoints[1]]
     
-    punto_3 = getFalsePoint(pc,pc_arr,listOfPoints,kdtree)
-    #punto_3 = pc_arr[listOfPoints[2]]
+    #punto_3 = getFalsePoint(pc,pc_arr,listOfPoints,kdtree)
+    punto_3 = pc_arr[listOfPoints[2]]
     
     #Calcular la normal a partir de 3 puntos
     normal = getNormal(punto_1,punto_2,punto_3)
@@ -159,23 +156,26 @@ def ransac(pc,kdtree,k,rango):
     numInteractions = 0
     bestMeasure = 0
     bestVolumeArr = []
+    totalPoints = pc.size
     
     #rango de distancia cuadratica
-    rango **= 2
+    #rango **= 2
+    k = 1000
     
     # la cantidad de veces que se hara el ciclo
     while numInteractions < k:
         
+        if (numInteractions % 50 == 0): print (numInteractions)
         puntos_azar = randomPoints(pc.size)
         
-        #Se obtiene el valor "d" de la funcion del plano
+        #Se obtiene además el valor "d" de la funcion del plano
         f_x = getFunctionOfPlane(pc,pc_arr,puntos_azar,kdtree)
         
         withinVolumenArr = []
         
         #Para saber si un punto esta dentro del volumen limite del plano
         for pos in range(len(pc_arr)):
-           
+            
             #Si el punto no se repite con los dos elegidos al azar
             if not isRepeatedPoint(puntos_azar,pos):
                 
@@ -188,6 +188,8 @@ def ransac(pc,kdtree,k,rango):
         
         #Obtener la mayor cantidad de puntos de todas las pruebas
         if (pointsInVolume > bestMeasure):
+            k = int(math.log(1 - 0.99) / math.log(1 - (pointsInVolume/totalPoints)**3))
+            print ("El mejor valor es: ", pointsInVolume, " Máx iter k = ",k, " ahora en: ",numInteractions)
             bestMeasure = pointsInVolume
             bestVolumeArr = withinVolumenArr
         
@@ -196,7 +198,7 @@ def ransac(pc,kdtree,k,rango):
     #Se le quita el segmento del total de puntos
     nuevo_arr = removeSegment(pc_arr,bestVolumeArr)
     pc_segmentado = pc.extract(nuevo_arr)
-    kdtree_segmentado = pcl.KdTreeFLANN(pc_segmentado)
+    kdtree_segmentado =pc_segmentado.make_kdtree_flann()
     
     
     #pc_segmento = pc.extract(mejor_volumen)
@@ -211,11 +213,11 @@ def ransac(pc,kdtree,k,rango):
 def iniciar(pc,kdtree,v):
       
     #Numero de iteraciones
-    k= 1000
+    k= 500
     
     if v == 1:
         #Variable de precision
-        rango = 1
+        rango = 1.1
     else:
         rango = 0.07
     

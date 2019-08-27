@@ -22,7 +22,7 @@ def segmentation(pos, pc, kdtree, v, verbose):
     
     if (verbose): print ("RansacAlgorithm.iniciar")
     pc_sin_seg, kdtree_sin_seg = RansacAlgorithm.iniciar(pc,kdtree,v)
-    #pc_sin_seg.to_file('data/entrenamiento/segmentado2/segmentado_%d.pcd'%(pos))
+   
     #pc, kdtree = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado2/segmentado_%d.pcd'%(pos))
     
     if (verbose): print ("ReduceNoise.reduceDistancePoint")
@@ -37,6 +37,7 @@ def segmentation(pos, pc, kdtree, v, verbose):
     if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
     kdtree_sin_out2 = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out2)
     
+    pc_sin_out2.to_file(str.encode('./segmentado_%d.pcd'%(pos)))
     #pc_sin_out2.to_file('data/entrenamiento/segmentado/segmentado_%d.pcd'%(pos))
     
     return pc_sin_out2,kdtree_sin_out2
