@@ -52,6 +52,8 @@ def estimationOfNormals(pc_array,punto_cercano, cantidad):
     for j in range(cantidad):
         #Para no tomar el primer valor que es del mismo punto
         if j > 0:
+            
+            
             if j < cantidad - 1:
                 
                for k in range(cantidad):
@@ -101,6 +103,7 @@ def getNormalDirection(pc,kdtree,cant):
     #En la posicion de cada punto de la nube de punto
     for pos in range(pc.size):
         
+        if (pos % 10000 == 0): print (pos)
         #Si no es una coordenada vacia
         if not math.isnan(pc_array[pos][0]):
             

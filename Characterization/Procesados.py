@@ -14,7 +14,7 @@ def entrenamiento(cant_PCD,porcentaje):
         if(pos < tope):
             print (pos)
             #Toma de datos procesados
-            dtp = pd.read_pickle("data/entrenamiento/procesado/procesado_%d.pkl"%(pos))
+            dtp = pd.read_pickle("./procesado_%d.pkl"%(pos))
         
             #Longitud del arreglo tomado
             longit = len(dtp['es'])
@@ -45,7 +45,7 @@ def prueba(cant_PCD,porcentaje):
         if(pos > base):
             
             #Toma de datos procesados
-            dtp = pd.read_pickle('data/entrenamiento/procesado/procesado_%d.pkl'%(pos))
+            dtp = pd.read_pickle('./procesado_%d.pkl'%(pos))
         
             #Longitud del arreglo tomado
             longit = len(dtp['es'])

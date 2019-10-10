@@ -26,6 +26,7 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
     #Position in the taken point cloud 
     for pos in range(num_puntos):
 
+        if (pos % 10000 == 0): print (pos, " en spfh")
         #Calcular puntos adyacentes
         punto_cercano, distancia = kdtree.nearest_k_search_for_point(pc,pos,
                                                                      cant)
@@ -79,8 +80,7 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
                       
                     #phi angle
                     phi = FpfhUtils.angleBetweenTwoVectors(
-                            pspt_normalized,
-                            u_normalized)
+                            u_normalized,pspt_normalized)
 
                     #Theta angle
                     theta_comp_1 = np.dot(w_normalized,n_sig_normalized) #comp_1 = w . n_t
@@ -101,6 +101,9 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
         #Division entre la cantidad de puntos adyacentes      
         spfhComponents /= numberOfPointsConsidered
         
+        if (spfhComponents[0]<0): print(spfhComponents[0])
+        if (spfhComponents[1]<0): print(spfhComponents[1])
+        if (spfhComponents[2]<0): print(spfhComponents[2])
         #To save point's components 
         spfhPoint.append(spfhComponents)
 
@@ -115,7 +118,7 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
     
     #Position in the taken point cloud
     for pos in range(num_puntos):
-        
+        if (pos % 10000 == 0): print (pos," en fpfh")
         nearPoint, distancia = kdtree.nearest_k_search_for_point(pc,pos,
                                                                      cant)
         
@@ -164,9 +167,6 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
         #add to list FPFH
         list_fpfh.append(fpfh)
         
-        print (fpfh)
-        print ("Este es el valor, GG")
-        print (fpfh)
     #Se retorna la lista fpfh y su respectivo indice en la nube de puntos
     return np.array(list_fpfh)
 
@@ -176,7 +176,7 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
 ###############################################################################
 def inicio(pc, kdtree, verbose):
 
-    cantidad = 20 #puntos (salen 2 normales menos al valor indicado en cantidad)
+    cantidad = 10 #puntos (salen 2 normales menos al valor indicado en cantidad)
   
     if (verbose): print ("normal.getNormalDirection")
     normalArr, normalIndex = normal.getNormalDirection(pc,kdtree,cantidad)

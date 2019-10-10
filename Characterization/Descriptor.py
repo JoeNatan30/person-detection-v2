@@ -343,7 +343,7 @@ def getExtremAndDescription(pc_arr, list_fpfh, punto_cercano):
     #orden x,y,z (min) + x,y,z (max)
     extremValues = [x_min, y_min, z_min, x_max, y_max, z_max]
     
-    return np.array(descripcion), np.array(extremValues) 
+    return np.array(descripcion), np.array(extremValues)
     
 ###############################################################################
 def getDescriptorSet(fpfhSet, pc, tamano_pc, NumPoints):
@@ -363,8 +363,8 @@ def getDescriptorSet(fpfhSet, pc, tamano_pc, NumPoints):
         #punto random del conjunto de puntos
         punto = randint(0,pc.size - 1)
         
-        #puntos cercanos al punto tomado 
-        nearPoint, d = kdtree.nearest_k_search_for_point(pc, punto, NumPoints)  
+        #puntos cercanos al punto tomado
+        nearPoint, d = kdtree.nearest_k_search_for_point(pc, punto, NumPoints)
         pc_arr = pc.to_array()
         
         #Descipcion y extremos del conjunto de puntos
@@ -394,7 +394,7 @@ def inicio(fpfhSet, pc, NumPoints, verbose):
     if (verbose): print ("getDescriptorSet")
     fpfhSet, indexSet ,extremSet= getDescriptorSet(fpfhSet,
                                                    pc,
-                                                   pc.size, 
+                                                   pc.size,
                                                    NumPoints)
     
     return fpfhSet, indexSet, extremSet
