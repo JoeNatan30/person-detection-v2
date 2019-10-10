@@ -9,7 +9,6 @@ from Algorithms import Svm, NeuralNetwork, RandomForest
 import time
 import pandas as pd
 
-
 ###############################################################################
 #Definitions    \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 ###############################################################################
@@ -79,7 +78,7 @@ def guardar_datos_procesados(pos,data_x, data_y):
             
     dtp = pd.DataFrame(datos)
             
-    dtp.to_pickle('data/entrenamiento/procesado/procesado_%d.pkl'%pos)
+    dtp.to_pickle('./procesado_%d.pkl'%pos)
     
     #para leer el fpfh de un archivo
     #fpfh = pd.read_pickle('data/entrenamiento/fpfh_%d.pkl'%pos)
@@ -87,7 +86,7 @@ def guardar_datos_procesados(pos,data_x, data_y):
     
 ###############################################################################
 def procesamiento_train(cant_PCD, porcentaje, tamano, version,
-                        max_paral, pos_paral, verbose):
+                        max_paral, pos_paral, rangeOfDiff, verbose):
     
     rest = pos_paral
     
@@ -96,12 +95,15 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
     for pos in range(cant_PCD):
         
         if(rest == pos % max_paral and pos < tope):
-        
+            
             print ("posición: ", pos)
             
             #Ruido
             if (verbose): print ("ReduceNoise.ruido")
-            pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(pos, verbose)
+            pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
+                    rangeOfDiff,
+                    pos,
+                    verbose)
             
             print (pc_sin_ruido)
             
@@ -111,11 +113,12 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                                               kdtree_sin_ruido,
                                               version, verbose)
             print (pc_seg)
+            
             #FPFH
             if (verbose): print ("Histogram")
             #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
             fpfh_list = histograma(pc_seg, kdtree_seg, verbose)
-
+            
             #Descriptor
             if (verbose): print ("Descriptor")
             dataset_X, dataset_Y, conj_extre = descripcion_train(pos,
@@ -124,15 +127,16 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                                                                  pc_seg,
                                                                  kdtree_seg,
                                                                  verbose)
-
+            
             #Guardado
             if (verbose): print ("Save Processed Data")
             guardar_datos_procesados(pos,dataset_X,dataset_Y)
-   
+            
             print ("END - Process: ", pos)
+            
 ###############################################################################
 def procesamiento_real(cant_PCD, porcentaje, tamano, version,
-                       max_paral, pos_paral, verbose):
+                       max_paral, pos_paral, rangeOfDiff, verbose):
     
     rest = pos_paral
     
@@ -146,7 +150,10 @@ def procesamiento_real(cant_PCD, porcentaje, tamano, version,
             print (pos)
             
             #Ruido
-            pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(pos)
+            pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
+                    rangeOfDiff,
+                    pos,
+                    verbose)
             
             #segmentacion        
             pc_seg, kdtree_seg = segmentation(pos,pc_sin_ruido, kdtree_sin_ruido,version)
@@ -193,7 +200,7 @@ def validacion_cruzada(cant, porcentaje, algoritmo, verbose):
     
     start_time = time.time()
     
-    if algoritmo == "svm":
+    if algoritmo == "rn":
         
         print ("inicio cross validation SVM")
         CrossValidation.optimize_svc(data_x,data_y)
@@ -236,3 +243,15 @@ def prueba(cant, porcentaje, algoritmo, verbose):
         print ("inicio Random Forest")
         RandomForest.predecir(data_x,data_y)
         print ("fin prediccion Random Forest", ("--- %s seconds ---" % (time.time() - start_time)))
+  
+###############################################################################
+def medition(cant_PCD,porcentaje,tamano_conjunto, version,
+             max_proces_paral, pos_proces_paral,rangeOfDiff,tipo,verbose):
+    
+    print ("medición de " + tipo)
+    
+    for pos in range(cant_PCD):
+        if(tipo == "ruido-rangeOfDiff"):
+            ReduceNoise.medition(rangeOfDiff, pos, verbose)
+        if(tipo == "ruido-rangeOfSamples"):
+            ReduceNoise.medition(rangeOfDiff, pos, verbose)

@@ -7,7 +7,7 @@ Created on Sat Mar 30 23:58:23 2019
 """
 import procesos
 
-def main(proceso):
+def main(proceso,tipo):
     
     cant_PCD = 1           # numero total de archivos de datos sin procesar
     porcentaje = 75         # porcentaje para el training
@@ -16,7 +16,8 @@ def main(proceso):
     version = 1             # version del kinect
     max_proces_paral = 4    # Maximo de procesos paralelos (se cuenta desde cero)
     pos_proces_paral = 0    # posicion de procesos paralelos (debe inicar en cero)
-    verbose = True          # to have more detail of the process
+    rangeOfDiff = 0.4       # Range of Difference used during normal calculation
+    verbose = False          # to have more detail of the process
     
     if proceso == "captura":
         procesos.lectura_(cant_PCD)
@@ -24,21 +25,21 @@ def main(proceso):
     elif proceso == "procesamiento_total":
         procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,
                                      version,max_proces_paral,
-                                     pos_proces_paral,verbose)
+                                     pos_proces_paral,rangeOfDiff, verbose)
         
         procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,
                                     version,max_proces_paral,
-                                    pos_proces_paral,verbose)
+                                    pos_proces_paral,rangeOfDiff, verbose)
 
     elif proceso == "procesamiento_train":
         procesos.procesamiento_train(cant_PCD,porcentaje,tamano_conjunto,
                                      version,max_proces_paral,
-                                     pos_proces_paral,verbose)
+                                     pos_proces_paral,rangeOfDiff, verbose)
         
     elif proceso == "procesamiento_real":
         procesos.procesamiento_real(cant_PCD,porcentaje,tamano_conjunto,
                                     version,max_proces_paral,
-                                    pos_proces_paral,verbose)
+                                    pos_proces_paral,rangeOfDiff, verbose)
 
     elif proceso == "entrenamiento":
         procesos.entrenamiento(cant_PCD,porcentaje,algoritmo,verbose)
@@ -49,6 +50,12 @@ def main(proceso):
     elif proceso == "prueba":
         procesos.prueba(cant_PCD,porcentaje,algoritmo,verbose)
         
+    elif proceso == "medicion":
+        procesos.medition(cant_PCD,porcentaje,tamano_conjunto,
+                          version,max_proces_paral,
+                          pos_proces_paral,rangeOfDiff,
+                          tipo, verbose)
+        
     else:
         print ("opciones:")
         print ("captura -> Solo captura desde kinet v2")
@@ -58,7 +65,11 @@ def main(proceso):
         print ("entrenamiento")
         print ("validacion_cruzada")
         print ("prueba")
-        
+        print ("medicion:")
+        print ("    ruido-rangeOfDiff")
+        print ("    ruido-rangeOfSamples")
+
+         
 ###############################################################################
 # MAIN
 ###############################################################################
@@ -71,4 +82,5 @@ def main(proceso):
             "validacion_cruzada"
             "prueba"
 """
-main("procesamiento_train")
+main("medicion","ruido-rangeOfDiff")
+#main("validacion_cruzada")

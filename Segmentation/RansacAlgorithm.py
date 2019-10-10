@@ -165,7 +165,6 @@ def ransac(pc,kdtree,k,rango):
     # la cantidad de veces que se hara el ciclo
     while numInteractions < k:
         
-        if (numInteractions % 50 == 0): print (numInteractions)
         puntos_azar = randomPoints(pc.size)
         
         #Se obtiene además el valor "d" de la funcion del plano
