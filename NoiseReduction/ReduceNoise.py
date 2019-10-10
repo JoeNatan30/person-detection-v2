@@ -7,6 +7,7 @@ Created on Sun Sep  2 19:32:51 2018
 """
 import math
 import numpy as np
+import time
 
 from NoiseReduction import ReduceNoiseUtils
 from NoiseReduction import KdtreeStructure
@@ -61,7 +62,7 @@ def reduceDistancePoint(pc,kdtree,v):
 # Eliminacion de ruido por normales
 ###############################################################################
     
-def isOutOfRange(dir_1,dir_2):
+def isOutOfRange(dir_1, dir_2, rangeOfDiff):
     
     dirVariation = []
     
@@ -88,35 +89,35 @@ def isOutOfRange(dir_1,dir_2):
         #       x = dir_1 - dir_2
         #
         #if value > 0.003:
-        if value > 0.4:
+        if value > rangeOfDiff: # 0.4
             return True
            
     #if any of vector components are not out the range
     return False
 
-def getNotSimilarNormals(direccion_normal,pos):
+def getNotSimilarNormals(direccion_normal ,rangeOfDiff ,pos):
     
     direction_1 = direccion_normal[pos]
     direction_2 = direccion_normal[pos+1]
     
     #if both normals are out of range
-    if isOutOfRange(direction_1,direction_2):
+    if isOutOfRange(direction_1, direction_2, rangeOfDiff):
         return True
     #if a normal with the oposite direction normal are out of range
-    if isOutOfRange(direction_1,direction_2 * -1):
+    if isOutOfRange(direction_1, direction_2 * -1, rangeOfDiff):
         return True
     else:
         return False
 
 
-def removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex):
+def removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex, rangeOfDiff):
     
     takenPoints = []
     
     for pos in range(len(normalIndex)-1):
         
         #Si son normales distintas entonces se guarda
-        if getNotSimilarNormals(normalDirection,pos):
+        if getNotSimilarNormals(normalDirection, rangeOfDiff, pos):
              takenPoints.append(normalIndex[pos])
 
     newPc = pc.extract(takenPoints)
@@ -124,7 +125,7 @@ def removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex):
     return newPc
 
 
-def init(pc,kdtree,verbose):
+def init(pc,kdtree,rangeOfDiff, verbose):
     
     #Obtener las normales  y sus indices
     if (verbose): print ("ReduceNoiseUtils.directionOfNormals")
@@ -132,7 +133,11 @@ def init(pc,kdtree,verbose):
     
     #El nuevo Point cloud sin planos
     if (verbose): print ("removeSimilarPointsUsingNormals")
-    pcWithoutFlatPart= removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex)
+    pcWithoutFlatPart= removeSimilarPointsUsingNormals(
+            pc,
+            normalDirection,
+            normalIndex,
+            rangeOfDiff)
     
     if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
     kdtreeWithoutFlatPart = KdtreeStructure.getKdtreeFromPointCloud(pcWithoutFlatPart)
@@ -152,7 +157,7 @@ def init(pc,kdtree,verbose):
 ###############################################################################
 #Aquí va las direcciones de lectura y escritura
     
-def ruido(pos,verbose):
+def ruido(rangeOfDiff, pos, verbose):
 
     readDir = '../inicial/inicial_%d.pcd'% pos
     writeDir = './sin_ruido_%d.pcd'% pos
@@ -163,7 +168,7 @@ def ruido(pos,verbose):
     
     #Proceso
     if (verbose): print ("PROCESS")
-    cleansedPc, cleansedKdtree = init(pc,kdtree,verbose)
+    cleansedPc, cleansedKdtree = init(pc,kdtree,rangeOfDiff,verbose)
     
     #Escritura
     if (verbose): print ("WRITE")
@@ -171,3 +176,41 @@ def ruido(pos,verbose):
     
     return cleansedPc, cleansedKdtree
 ###############################################################################
+    
+def medition(rangeOfDiff, pos, verbose):
+    
+    readDir = '../inicial/inicial_%d.pcd'% pos
+    #writeDir = './sin_ruido_%d.pcd'% pos
+    
+    #Lectura
+    if (verbose): print ("READ")
+    pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
+    
+    #Proceso
+    if (verbose): print ("MEDITION - INIT")
+    cleansedPc, cleansedKdtree = initMedition(pc,kdtree,rangeOfDiff,verbose)
+    
+    #Escritura
+    #if (verbose): print ("WRITE")
+    #cleansedPc.to_file(str.encode(writeDir))
+    
+    #return cleansedPc, cleansedKdtree
+    
+def initMedition(pc,kdtree,rangeOfDiff, verbose):
+    
+
+    print ('Total',',',pc.size)
+    for cant in range(10):
+       
+        #Obtener las normales  y sus indices
+        if (verbose): print ("ReduceNoiseUtils.directionOfNormalsMedition")
+        start_time = time.time()
+        normalDirection1, normalIndex = ReduceNoiseUtils.directionOfNormalsMedition(pc,kdtree,cant + 1)
+        simple = (time.time() - start_time)
+        
+        if (verbose): print ("ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition")
+        start_time = time.time()
+        normalDirection2, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree, cant + 1)
+        comple = (time.time() - start_time)
+        
+        print (cant+1,',',simple,',',normalDirection1.size,',',comple,',',normalDirection2.size)

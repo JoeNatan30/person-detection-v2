@@ -56,11 +56,39 @@ def estimationOfNormals(pc_array,punto_cercano, cantidad):
                 normal_intermedia = computeNormal(pc_array,punto_cercano,
                                                     j,j+1)
            
-                suma_normal = suma_normal + normal_intermedia
+                suma_normal += normal_intermedia
                 
-
                 cont = cont + 1
                 
+    normal = suma_normal/cont
+
+    return normal
+
+def estimationOfMoreRelatedNormals(pc_array,punto_cercano, cantidad):
+    
+    suma_normal = np.zeros(3)
+    cont = 0
+
+    for j in range(cantidad):
+        #Para no tomar el primer valor que es del mismo punto
+        if j > 0:
+            
+            
+            if j < cantidad - 1:
+                
+               for k in range(cantidad):
+                   
+                if k + j + 1 >= cantidad: break #en caso salga del rango
+               
+                k_temp = k + j + 1
+                
+                normal_intermedia = computeNormal(pc_array,punto_cercano,
+                                                    j,k_temp)
+                
+                suma_normal += normal_intermedia
+                
+                cont += 1
+
     normal = suma_normal/cont
 
     return normal
@@ -72,7 +100,73 @@ def directionOfNormals(pc,kdtree):
     normalIndex = [] 
     normales = []
     
-    quantity = 4
+    quantity = 10
+    
+    #En la posicion de cada punto de la nube de punto
+    for pos in range(pc.size):
+        
+        #Guardar la posicion del punto
+        normalIndex.append(pos)
+            
+        #Calcular puntos adyacentes
+        nearPoint, d = kdtree.nearest_k_search_for_point(pc,pos,
+                                                         quantity)
+        
+        #normal = estimationOfNormals(pcArray,nearPoint,quantity)
+        normal = estimationOfMoreRelatedNormals(pcArray,nearPoint,quantity)
+        
+        normalMagnitude = computeNormalMagnitude(normal)
+        
+        if normalMagnitude != 0:
+            
+            normalDirection = computeNormalDirection(normal,normalMagnitude)
+            normales.append(normalDirection)
+        else:
+            
+            normales.append(np.zeros(3))
+
+    normalsArray = np.asarray(normales)
+    return normalsArray, normalIndex
+
+def directionOfMoreRelatedNormalsMedition(pc,kdtree,quantity):
+
+    pcArray = pc.to_array()
+    
+    normalIndex = [] 
+    normales = []
+    
+    #En la posicion de cada punto de la nube de punto
+    for pos in range(pc.size):
+        
+        #Guardar la posicion del punto
+        normalIndex.append(pos)
+            
+        #Calcular puntos adyacentes
+        nearPoint, d = kdtree.nearest_k_search_for_point(pc,pos,
+                                                         quantity)
+        
+        #normal = estimationOfNormals(pcArray,nearPoint,quantity)
+        normal = estimationOfMoreRelatedNormals(pcArray,nearPoint,quantity)
+        
+        normalMagnitude = computeNormalMagnitude(normal)
+        
+        if normalMagnitude != 0:
+            
+            normalDirection = computeNormalDirection(normal,normalMagnitude)
+            normales.append(normalDirection)
+        else:
+            
+            normales.append(np.zeros(3))
+
+    normalsArray = np.asarray(normales)
+    return normalsArray, normalIndex
+
+def directionOfNormalsMedition(pc,kdtree,quantity):
+
+    pcArray = pc.to_array()
+    
+    normalIndex = [] 
+    normales = []
     
     #En la posicion de cada punto de la nube de punto
     for pos in range(pc.size):
@@ -85,6 +179,8 @@ def directionOfNormals(pc,kdtree):
                                                          quantity)
         
         normal = estimationOfNormals(pcArray,nearPoint,quantity)
+        #normal = estimationOfMoreRelatedNormals(pcArray,nearPoint,quantity)
+        
         normalMagnitude = computeNormalMagnitude(normal)
         
         if normalMagnitude != 0:
