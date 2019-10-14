@@ -51,7 +51,7 @@ def main(proceso,tipo):
         procesos.prueba(cant_PCD,porcentaje,algoritmo,verbose)
         
     elif proceso == "medicion":
-        procesos.medition(cant_PCD,porcentaje,tamano_conjunto,
+        procesos.medition(cant_PCD,tamano_conjunto,
                           version,max_proces_paral,
                           pos_proces_paral,rangeOfDiff,
                           tipo, verbose)

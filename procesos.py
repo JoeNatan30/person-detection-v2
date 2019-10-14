@@ -245,13 +245,10 @@ def prueba(cant, porcentaje, algoritmo, verbose):
         print ("fin prediccion Random Forest", ("--- %s seconds ---" % (time.time() - start_time)))
   
 ###############################################################################
-def medition(cant_PCD,porcentaje,tamano_conjunto, version,
-             max_proces_paral, pos_proces_paral,rangeOfDiff,tipo,verbose):
+def medition(cant_PCD,tamano_conjunto, version,
+             max_paral, pos_paral,rangeOfDiff,tipo,verbose):
     
     print ("medición de " + tipo)
-    
     for pos in range(cant_PCD):
-        if(tipo == "ruido-rangeOfDiff"):
-            ReduceNoise.medition(rangeOfDiff, pos, verbose)
-        if(tipo == "ruido-rangeOfSamples"):
-            ReduceNoise.medition(rangeOfDiff, pos, verbose)
+        
+        ReduceNoise.medition(rangeOfDiff,pos,tipo,verbose)

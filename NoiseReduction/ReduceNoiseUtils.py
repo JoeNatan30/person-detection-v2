@@ -73,12 +73,11 @@ def estimationOfMoreRelatedNormals(pc_array,punto_cercano, cantidad):
         #Para no tomar el primer valor que es del mismo punto
         if j > 0:
             
-            
             if j < cantidad - 1:
                 
                for k in range(cantidad):
                    
-                if k + j + 1 >= cantidad: break #en caso salga del rango
+                if k + j + 1 >= cantidad: continue #en caso salga del rango
                
                 k_temp = k + j + 1
                 

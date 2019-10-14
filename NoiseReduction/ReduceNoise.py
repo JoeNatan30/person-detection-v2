@@ -177,7 +177,7 @@ def ruido(rangeOfDiff, pos, verbose):
     return cleansedPc, cleansedKdtree
 ###############################################################################
     
-def medition(rangeOfDiff, pos, verbose):
+def medition(rangeOfDiff, pos, tipo, verbose):
     
     readDir = '../inicial/inicial_%d.pcd'% pos
     #writeDir = './sin_ruido_%d.pcd'% pos
@@ -186,31 +186,89 @@ def medition(rangeOfDiff, pos, verbose):
     if (verbose): print ("READ")
     pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
     
-    #Proceso
-    if (verbose): print ("MEDITION - INIT")
-    cleansedPc, cleansedKdtree = initMedition(pc,kdtree,rangeOfDiff,verbose)
+    if(tipo == "ruido-rangeOfDiff"):
+        initRSDifftMedition(pc,kdtree,pos, verbose)
+    
+    if(tipo == "ruido-rangeOfSamples"):
+        initRSSamplesMedition(pc,kdtree,rangeOfDiff, verbose)
     
     #Escritura
     #if (verbose): print ("WRITE")
     #cleansedPc.to_file(str.encode(writeDir))
     
     #return cleansedPc, cleansedKdtree
+
+def initRSDifftMedition(pc,kdtree,pos, verbose):
+
+    print("Total size: ", pc.size)
+    normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormalsMedition(pc,kdtree,5)
     
-def initMedition(pc,kdtree,rangeOfDiff, verbose):
+    print(normalDirection)
+    
+
+    rangeStart = 0.01
+    rangenumber = 10
+    rangeLong = 0.5
+    rangeList = []
+    
+    for segmentPos in range (rangenumber):
+        rangeList.append(rangeStart + rangeLong*segmentPos)
+    
+    for rangeOfDiff in rangeList:
+        
+        pcWithoutFlatPart = removeSimilarPointsUsingNormals(
+                pc,
+                normalDirection,
+                normalIndex,
+                rangeOfDiff)
+        
+        print (pcWithoutFlatPart.size)
+    
+def initRSSamplesMedition(pc,kdtree,rangeOfDiff, verbose):
     
 
     print ('Total',',',pc.size)
+    print ('MAX',',','Tiempo normal simple',',','Tiempo remove normal simple',',','Número de puntos simple',',','Tiempo normal complex',',','Tiempo remove normal complex',',','Número de puntos complex')
     for cant in range(10):
-       
+        
+        if(cant== 0 or cant == 1 or cant == 2): continue
+        
         #Obtener las normales  y sus indices
         if (verbose): print ("ReduceNoiseUtils.directionOfNormalsMedition")
         start_time = time.time()
         normalDirection1, normalIndex = ReduceNoiseUtils.directionOfNormalsMedition(pc,kdtree,cant + 1)
+        print(normalDirection1)
         simple = (time.time() - start_time)
         
+        if (verbose): print ("removeSimilarPointsUsingNormals")
+        start_time = time.time()
+        pcWithoutFlatPart1 = removeSimilarPointsUsingNormals(
+                pc,
+                normalDirection1,
+                normalIndex,
+                rangeOfDiff)
+        
+        simple2 = (time.time() - start_time)
+        
+        numPointSimple = pcWithoutFlatPart1.size
+        
+        #######################################################################
         if (verbose): print ("ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition")
         start_time = time.time()
         normalDirection2, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree, cant + 1)
+        print(normalDirection2)
         comple = (time.time() - start_time)
         
-        print (cant+1,',',simple,',',normalDirection1.size,',',comple,',',normalDirection2.size)
+        if (verbose): print ("removeSimilarPointsUsingNormals")
+        start_time = time.time()
+        pcWithoutFlatPart2 = removeSimilarPointsUsingNormals(
+                pc,
+                normalDirection2,
+                normalIndex,
+                rangeOfDiff)
+        
+        comple2 = (time.time() - start_time)
+        
+        numPointcomplex = pcWithoutFlatPart2.size
+        
+        print (cant+1,',',simple,',',simple2,',',numPointSimple,',',comple,',',comple2,',',numPointcomplex)
