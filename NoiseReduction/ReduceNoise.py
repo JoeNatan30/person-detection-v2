@@ -62,49 +62,43 @@ def reduceDistancePoint(pc,kdtree,v):
 # Eliminacion de ruido por normales
 ###############################################################################
     
-def isOutOfRange(dir_1, dir_2, rangeOfDiff):
+def isInAngle(dir_1,dir_2,rangeOfDiff):
     
-    dirVariation = []
+    cosineOfAngle = np.dot(dir_1,dir_2)
     
-    for pos in range(3):
-        dirVariation.append(math.fabs(dir_1[pos]-dir_2[pos]))
- 
-    """
-    The idea of this For is to get almost one component that is out of the 
-    chosen range to say the function is true
-    """
-    for value in dirVariation:
-        
-        #return true if its diffece is more than the chosen value
-        #if the chosen value is reduced,
-        #it's possible to get more points
-        #
-        #         dir_1    dir_2
-        #             ^    ^
-        #             | X /
-        #             |  /
-        # se salva    | /  Se salva
-        #     ________|/______________
-        #   
-        #       x = dir_1 - dir_2
-        #
-        #if value > 0.003:
-        if value > rangeOfDiff: # 0.4
-            return True
-           
-    #if any of vector components are not out the range
-    return False
-
-def getNotSimilarNormals(direccion_normal ,rangeOfDiff ,pos):
+    #Because some of this values are close to 1 or -1
+    if(cosineOfAngle>1):
+        cosineOfAngle=1
+    elif (cosineOfAngle<-1):
+        cosineOfAngle=-1
+    #####
     
-    direction_1 = direccion_normal[pos]
-    direction_2 = direccion_normal[pos+1]
+    angle = math.acos(cosineOfAngle)
     
-    #if both normals are out of range
-    if isOutOfRange(direction_1, direction_2, rangeOfDiff):
+    if angle < rangeOfDiff:
         return True
-    #if a normal with the oposite direction normal are out of range
-    if isOutOfRange(direction_1, direction_2 * -1, rangeOfDiff):
+    else:
+        return False
+
+def getNotSimilarNormals(normalDirection ,rangeOfDiff ,pos):
+    
+    direction_1 = normalDirection[pos]
+    direction_2 = normalDirection[pos+1]
+
+    ########################################
+    #
+    #         dir_1    dir_2
+    #             ^    ^
+    #             |   /
+    #             |ö /
+    # se salva    |-/  Se salva
+    #     ________|/______________
+    #   
+    #       ö = angle between dir_1 and dir2
+    #
+    ########################################}
+    
+    if (not isInAngle(direction_1,direction_2,rangeOfDiff)):
         return True
     else:
         return False
@@ -119,11 +113,10 @@ def removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex, rangeOfDiff)
         #Si son normales distintas entonces se guarda
         if getNotSimilarNormals(normalDirection, rangeOfDiff, pos):
              takenPoints.append(normalIndex[pos])
-
+    
     newPc = pc.extract(takenPoints)
 
     return newPc
-
 
 def init(pc,kdtree,rangeOfDiff, verbose):
     
@@ -141,18 +134,16 @@ def init(pc,kdtree,rangeOfDiff, verbose):
     
     if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
     kdtreeWithoutFlatPart = KdtreeStructure.getKdtreeFromPointCloud(pcWithoutFlatPart)
-
     
-    '''
     #Se limpia de los outliears
-    pc_sin_ruido = sin_puntos_lejanos_distancias(pc_sin_planos,
-                                                 kdtree_sin_planos)
-    #pc_sin_ruido.to_file('data/sin_ruido/sin_plano/sin_plano4.pcd')
+    cleansedPc = reduceDistancePoint(pcWithoutFlatPart, kdtreeWithoutFlatPart,verbose)
+    writeDir = './sin_plano_x.pcd'
+    cleansedPc.to_file(str.encode(writeDir))
     
     #Nuevo kdtree sin ruido
-    kdtree_sin_ruido = KdtreeStructure.obtencion_kdtree_from_pointCloud(pc_sin_ruido)
-    '''
-    return pcWithoutFlatPart, kdtreeWithoutFlatPart
+    cleansedkdtree = KdtreeStructure.getKdtreeFromPointCloud(cleansedPc)
+    
+    return cleansedPc, cleansedkdtree
 
 ###############################################################################
 #Aquí va las direcciones de lectura y escritura
@@ -165,6 +156,7 @@ def ruido(rangeOfDiff, pos, verbose):
     #Lectura
     if (verbose): print ("READ")
     pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
+    print('Tamaño inicial: ',pc.size)
     
     #Proceso
     if (verbose): print ("PROCESS")
@@ -201,19 +193,31 @@ def medition(rangeOfDiff, pos, tipo, verbose):
 def initRSDifftMedition(pc,kdtree,pos, verbose):
 
     print("Total size: ", pc.size)
-    normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormalsMedition(pc,kdtree,5)
+    normalDirection, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree,10)
+    #normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormalsMedition(pc,kdtree,50)
     
     print(normalDirection)
     
-
-    rangeStart = 0.01
-    rangenumber = 10
-    rangeLong = 0.5
+    rangeStart = 0.0000000149
+    rangeLong  = 0.00000000001
+    rangeNumber = 100000
+    rangeList = []
+    
+    print (rangeStart)
+    print ("")
+    for segmentPos in range (rangeNumber):
+        rangeList.append(rangeStart + rangeLong * segmentPos)
+    '''
+    rangeStart = 1
+    rangenumber = 100
+    rangeLong = 100000
     rangeList = []
     
     for segmentPos in range (rangenumber):
-        rangeList.append(rangeStart + rangeLong*segmentPos)
-    
+        rangeList.append(rangeStart / rangeLong*segmentPos)
+     
+    '''
+    contadorRango = 0
     for rangeOfDiff in rangeList:
         
         pcWithoutFlatPart = removeSimilarPointsUsingNormals(
@@ -222,7 +226,8 @@ def initRSDifftMedition(pc,kdtree,pos, verbose):
                 normalIndex,
                 rangeOfDiff)
         
-        print (pcWithoutFlatPart.size)
+        print (contadorRango,'=> ',(pcWithoutFlatPart.size*100/pc.size))
+        contadorRango +=1
     
 def initRSSamplesMedition(pc,kdtree,rangeOfDiff, verbose):
     

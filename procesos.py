@@ -97,7 +97,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
         if(rest == pos % max_paral and pos < tope):
             
             print ("posición: ", pos)
-            
+            print("menor que: ",rangeOfDiff)
             #Ruido
             if (verbose): print ("ReduceNoise.ruido")
             pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
@@ -105,14 +105,14 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                     pos,
                     verbose)
             
-            print (pc_sin_ruido)
+            print('Tamaño Sin Ruido: ',pc_sin_ruido.size)
             
             #segmentacion
             if (verbose): print ("segmentation")
             pc_seg, kdtree_seg = segmentation(pos,pc_sin_ruido,
                                               kdtree_sin_ruido,
                                               version, verbose)
-            print (pc_seg)
+            print (pc_seg.size)
             
             #FPFH
             if (verbose): print ("Histogram")
