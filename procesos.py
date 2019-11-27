@@ -96,7 +96,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
         
         if(rest == pos % max_paral and pos < tope):
             
-            print ("posición: ", pos)
+            print ("posicion: ", pos)
             print("menor que: ",rangeOfDiff)
             #Ruido
             if (verbose): print ("ReduceNoise.ruido")
@@ -105,7 +105,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                     pos,
                     verbose)
             
-            print('Tamaño Sin Ruido: ',pc_sin_ruido.size)
+            print('Tamano Sin Ruido: ',pc_sin_ruido.size)
             
             #segmentacion
             if (verbose): print ("segmentation")
@@ -246,9 +246,9 @@ def prueba(cant, porcentaje, algoritmo, verbose):
   
 ###############################################################################
 def medition(cant_PCD,tamano_conjunto, version,
-             max_paral, pos_paral,rangeOfDiff,tipo,verbose):
+             max_paral, pos_paral,rangeOfDiff,tipo,precision,verbose):
     
-    print ("medición de " + tipo)
+    print ("medicion de " + tipo)
     for pos in range(cant_PCD):
         
-        ReduceNoise.medition(rangeOfDiff,pos,tipo,verbose)
+        ReduceNoise.medition(rangeOfDiff,pos,tipo,precision,verbose)

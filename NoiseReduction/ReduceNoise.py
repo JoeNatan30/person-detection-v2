@@ -151,7 +151,7 @@ def init(pc,kdtree,rangeOfDiff, verbose):
 def ruido(rangeOfDiff, pos, verbose):
 
     readDir = '../inicial/inicial_%d.pcd'% pos
-    writeDir = './sin_ruido_%d.pcd'% pos
+    writeDir = './sin_ruido_met2_3_%d.pcd'% pos
     
     #Lectura
     if (verbose): print ("READ")
@@ -169,7 +169,7 @@ def ruido(rangeOfDiff, pos, verbose):
     return cleansedPc, cleansedKdtree
 ###############################################################################
     
-def medition(rangeOfDiff, pos, tipo, verbose):
+def medition(rangeOfDiff, pos, tipo, precision, verbose):
     
     readDir = '../inicial/inicial_%d.pcd'% pos
     #writeDir = './sin_ruido_%d.pcd'% pos
@@ -184,6 +184,8 @@ def medition(rangeOfDiff, pos, tipo, verbose):
     if(tipo == "ruido-rangeOfSamples"):
         initRSSamplesMedition(pc,kdtree,rangeOfDiff, verbose)
     
+    if(tipo == "ruido-normalPrecision"):
+        initNormalPrecision(pc,kdtree,rangeOfDiff,precision,verbose)
     #Escritura
     #if (verbose): print ("WRITE")
     #cleansedPc.to_file(str.encode(writeDir))
@@ -193,14 +195,15 @@ def medition(rangeOfDiff, pos, tipo, verbose):
 def initRSDifftMedition(pc,kdtree,pos, verbose):
 
     print("Total size: ", pc.size)
-    normalDirection, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree,10)
+    normalDirection, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree,5)
     #normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormalsMedition(pc,kdtree,50)
     
     print(normalDirection)
     
-    rangeStart = 0.0000000149
-    rangeLong  = 0.00000000001
-    rangeNumber = 100000
+    #rangeStart = 0.00000000149
+    rangeStart = 0.000000014889
+    rangeLong  = 0.000000000001
+    rangeNumber = 1500
     rangeList = []
     
     print (rangeStart)
@@ -277,3 +280,43 @@ def initRSSamplesMedition(pc,kdtree,rangeOfDiff, verbose):
         numPointcomplex = pcWithoutFlatPart2.size
         
         print (cant+1,',',simple,',',simple2,',',numPointSimple,',',comple,',',comple2,',',numPointcomplex)
+
+def initNormalPrecision(pc,kdtree,rangeOfDiff,precision,verbose):
+   
+    number = 2000
+    
+    pc_array = pc.to_array()
+    
+    pointRange = int(pc.size / number)
+    
+    pointArr = []
+    normalArr = []
+    
+    for pointTimes in range(number - 2): # -2 to avoid overflow pc size
+        
+        pointTaked = pointRange * (pointTimes+1) # +1 to avoid take cero value
+        
+        pointArr.append(pointTaked) 
+    
+    pc_2 = pc.extract(pointArr)
+    
+    nearPoints, d = kdtree.nearest_k_search_for_cloud(pc_2,precision+1) # +1 because kdtree will return the point itself
+    
+    for oneNearPoint in nearPoints:
+        
+        normal = ReduceNoiseUtils.estimationOfMoreRelatedNormals(pc_array,oneNearPoint,precision+1) # +1 to avoid use the point itself
+        normalMagnitude = ReduceNoiseUtils.computeNormalMagnitude(normal)
+        
+        if normalMagnitude != 0:
+            
+            normalDirection = ReduceNoiseUtils.computeNormalDirection(normal,normalMagnitude)
+            normalArr.append(normalDirection)
+        else:
+            
+            normalArr.append(np.zeros(3))
+            
+    for num in range(len(nearPoints)):       
+        print(normalArr[num])
+    
+    # get normals from these maps and save the precition
+    

@@ -99,7 +99,7 @@ def directionOfNormals(pc,kdtree):
     normalIndex = [] 
     normales = []
     
-    quantity = 5
+    quantity = 10
     
     #En la posicion de cada punto de la nube de punto
     for pos in range(pc.size):
@@ -111,8 +111,8 @@ def directionOfNormals(pc,kdtree):
         nearPoint, d = kdtree.nearest_k_search_for_point(pc,pos,
                                                          quantity)
         
-        #normal = estimationOfNormals(pcArray,nearPoint,quantity)
-        normal = estimationOfMoreRelatedNormals(pcArray,nearPoint,quantity)
+        normal = estimationOfNormals(pcArray,nearPoint,quantity)
+        #normal = estimationOfMoreRelatedNormals(pcArray,nearPoint,quantity)
 
         normalMagnitude = computeNormalMagnitude(normal)
 
