@@ -154,16 +154,16 @@ def ruido(rangeOfDiff, pos, verbose):
     writeDir = './sin_ruido_met2_3_%d.pcd'% pos
     
     #Lectura
-    if (verbose): print ("READ")
+    if (verbose): print ("READ - ruido")
     pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
     print('Tamaño inicial: ',pc.size)
     
     #Proceso
-    if (verbose): print ("PROCESS")
+    if (verbose): print ("PROCESS - ruido")
     cleansedPc, cleansedKdtree = init(pc,kdtree,rangeOfDiff,verbose)
     
     #Escritura
-    if (verbose): print ("WRITE")
+    if (verbose): print ("WRITE - ruido")
     cleansedPc.to_file(str.encode(writeDir))
     
     return cleansedPc, cleansedKdtree
@@ -296,7 +296,7 @@ def initNormalPrecision(pc,kdtree,rangeOfDiff,precision,verbose):
         
         pointTaked = pointRange * (pointTimes+1) # +1 to avoid take cero value
         
-        pointArr.append(pointTaked) 
+        pointArr.append(pointTaked)
     
     pc_2 = pc.extract(pointArr)
     
@@ -316,7 +316,6 @@ def initNormalPrecision(pc,kdtree,rangeOfDiff,precision,verbose):
             normalArr.append(np.zeros(3))
             
     for num in range(len(nearPoints)):       
-        print(normalArr[num])
+        print(num,',',normalArr[num][0],',',normalArr[num][1],',',normalArr[num][2],',')
     
     # get normals from these maps and save the precition
-    

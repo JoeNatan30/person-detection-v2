@@ -12,7 +12,7 @@ def computeNormalDirection(normal,magnitud_normal):
     return normal * (1/magnitud_normal)
     
 def computeNormalMagnitude(normal):
-    return (normal[0]**2 + normal[1]**2 + normal[2]**2)**0.5
+    return np.linalg.norm(normal) # sqrt(sqr x + sqr y + sqr z)
     
 def fixNormalDirection(normal,punto):
     
@@ -52,7 +52,6 @@ def estimationOfNormals(pc_array,punto_cercano, cantidad):
     for j in range(cantidad):
         #Para no tomar el primer valor que es del mismo punto
         if j > 0:
-            
             
             if j < cantidad - 1:
                 
@@ -112,7 +111,9 @@ def getNormalDirection(pc,kdtree,cant):
             
             #Calcular puntos adyacentes
             nearPoint, d = kdtree.nearest_k_search_for_point(pc,pos,cant)
+            
             normal = estimationOfNormals(pc_array,nearPoint,cant)
+            
             normales.append(normal)
             
             normalMagnitude = computeNormalMagnitude(normal)

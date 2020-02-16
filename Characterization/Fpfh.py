@@ -178,6 +178,7 @@ def inicio(pc, kdtree, verbose):
 
     cantidad = 10 #puntos (salen 2 normales menos al valor indicado en cantidad)
   
+   
     if (verbose): print ("normal.getNormalDirection")
     normalArr, normalIndex = normal.getNormalDirection(pc,kdtree,cantidad)
     

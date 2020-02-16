@@ -148,7 +148,7 @@ def randomPoints(total):
     return resultado
 
 ###############################################################################
-def ransac(pc,kdtree,k,rango):
+def ransac(pc,kdtree,rango):
     
     pc_arr = pc.to_array()
     
@@ -160,6 +160,8 @@ def ransac(pc,kdtree,k,rango):
     
     #rango de distancia cuadratica
     #rango **= 2
+    
+    #This value is used only to initialize K it could be any value over 1
     k = 1000
     
     # la cantidad de veces que se hara el ciclo
@@ -187,8 +189,11 @@ def ransac(pc,kdtree,k,rango):
         
         #Obtener la mayor cantidad de puntos de todas las pruebas
         if (pointsInVolume > bestMeasure):
+            
+            #Statistic Formula to get the best approximate value of iteration
             k = int(math.log(1 - 0.99) / math.log(1 - (pointsInVolume/totalPoints)**3))
             print ("El mejor valor es: ", pointsInVolume, " Máx iter k = ",k, " ahora en: ",numInteractions)
+           
             bestMeasure = pointsInVolume
             bestVolumeArr = withinVolumenArr
         
@@ -211,16 +216,14 @@ def ransac(pc,kdtree,k,rango):
 
 def iniciar(pc,kdtree,v):
       
-    #Numero de iteraciones
-    k= 500
-    
     if v == 1:
         #Variable de precision
-        rango = 1.1
+        rango = 0.45
     else:
         rango = 0.07
     
-    pc, kdtree = ransac(pc,kdtree,k,rango)
+    print("rango = ",rango)
+    pc, kdtree = ransac(pc,kdtree,rango)
     
     return pc, kdtree
     

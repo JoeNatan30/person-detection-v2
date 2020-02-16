@@ -1,7 +1,6 @@
 import math
 import numpy as np
 
-
 """
 Return Acosine of Cos( V1 . V2 / |V1||V2| )
 where V1 and V2 are two normalized vectors
@@ -60,6 +59,8 @@ def componentsNormalization(fpfh):
 formula: (math.cos(  X /2 + math.pi) + 1 ) / 2
 """
 def CosineAngleFormula(angle):
+    
+    while(angle > math.pi*2): angle - (math.pi*2)
     
     angle = angle/2
     angle += math.pi

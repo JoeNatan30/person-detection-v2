@@ -51,6 +51,7 @@ def estimationOfNormals(pc_array,punto_cercano, cantidad):
     for j in range(cantidad):
         #Para no tomar el primer valor que es del mismo punto
         if j > 0:
+            
             if j < cantidad - 1:
                 
                 normal_intermedia = computeNormal(pc_array,punto_cercano,

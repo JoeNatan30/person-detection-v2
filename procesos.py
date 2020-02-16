@@ -83,7 +83,7 @@ def guardar_datos_procesados(pos,data_x, data_y):
     #para leer el fpfh de un archivo
     #fpfh = pd.read_pickle('data/entrenamiento/fpfh_%d.pkl'%pos)
     #fpfh_list = fpfh.values
-    
+
 ###############################################################################
 def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                         max_paral, pos_paral, rangeOfDiff, verbose):
@@ -98,6 +98,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
             
             print ("posicion: ", pos)
             print("menor que: ",rangeOfDiff)
+            
             #Ruido
             if (verbose): print ("ReduceNoise.ruido")
             pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
@@ -133,7 +134,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
             guardar_datos_procesados(pos,dataset_X,dataset_Y)
             
             print ("END - Process: ", pos)
-            
+
 ###############################################################################
 def procesamiento_real(cant_PCD, porcentaje, tamano, version,
                        max_paral, pos_paral, rangeOfDiff, verbose):
@@ -192,7 +193,7 @@ def entrenamiento(cant, porcentaje, algoritmo, verbose):
         print ("inicio Random Forest")
         RandomForest.entrenar(data_x,data_y)
         print ("Random Forest entrenado", ("--- %s seconds ---" % (time.time() - start_time)))
-        
+
 ###############################################################################
 def validacion_cruzada(cant, porcentaje, algoritmo, verbose):
     
@@ -218,7 +219,7 @@ def validacion_cruzada(cant, porcentaje, algoritmo, verbose):
         print ("inicio cross validation Forest")
         CrossValidation.optimize_rfc(data_x,data_y)
         print ("fin cross validation Random Forest", ("--- %s seconds ---" % (time.time() - start_time)))
-        
+
 ###############################################################################    
 def prueba(cant, porcentaje, algoritmo, verbose):
     
@@ -243,7 +244,7 @@ def prueba(cant, porcentaje, algoritmo, verbose):
         print ("inicio Random Forest")
         RandomForest.predecir(data_x,data_y)
         print ("fin prediccion Random Forest", ("--- %s seconds ---" % (time.time() - start_time)))
-  
+
 ###############################################################################
 def medition(cant_PCD,tamano_conjunto, version,
              max_paral, pos_paral,rangeOfDiff,tipo,precision,verbose):
