@@ -169,7 +169,7 @@ def ransac(pc,kdtree,rango):
         
         puntos_azar = randomPoints(pc.size)
         
-        #Se obtiene además el valor "d" de la funcion del plano
+        #Se obtiene ademas el valor "d" de la funcion del plano
         f_x = getFunctionOfPlane(pc,pc_arr,puntos_azar,kdtree)
         
         withinVolumenArr = []
@@ -192,7 +192,7 @@ def ransac(pc,kdtree,rango):
             
             #Statistic Formula to get the best approximate value of iteration
             k = int(math.log(1 - 0.99) / math.log(1 - (pointsInVolume/totalPoints)**3))
-            print ("El mejor valor es: ", pointsInVolume, " Máx iter k = ",k, " ahora en: ",numInteractions)
+            print ("El mejor valor es: ", pointsInVolume, " Max iter k = ",k, " ahora en: ",numInteractions)
            
             bestMeasure = pointsInVolume
             bestVolumeArr = withinVolumenArr

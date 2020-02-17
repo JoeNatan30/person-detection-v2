@@ -87,7 +87,7 @@ def guardar_datos_procesados(pos,data_x, data_y):
 ###############################################################################
 def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                         max_paral, pos_paral, rangeOfDiff, verbose):
-    
+
     rest = pos_paral
     
     tope = cant_PCD * porcentaje / 100
