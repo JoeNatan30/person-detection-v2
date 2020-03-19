@@ -9,7 +9,7 @@ import procesos
 
 def main(proceso,tipo):
     
-    cant_PCD = 1           # numero total de archivos de datos sin procesar
+    cant_PCD = 4000           # numero total de archivos de datos sin procesar
     porcentaje = 75         # porcentaje para el training
     #tamano_conjunto = 300   # tamano del conjunto de puntos a tomar
     tamano_conjunto = 800   # tamano del conjunto de puntos a tomar

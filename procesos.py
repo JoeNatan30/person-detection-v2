@@ -93,7 +93,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
     tope = cant_PCD * porcentaje / 100
     
     for pos in range(cant_PCD):
-        
+        print (pos, cant_PCD, porcentaje)
         if(rest == pos % max_paral and pos < tope):
             
             print ("posicion: ", pos)
