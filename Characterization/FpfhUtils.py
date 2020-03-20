@@ -30,8 +30,8 @@ Return a normalized vector but norma is of ord = 2
 """
 def vectorNormalizationNorm2(vector):
     
-     #Norm
-    v_norm2 = np.linalg.norm(vector, ord=2)
+    #Norm
+    v_norm2 = np.linalg.norm(vector*1.0, ord=2)
 
     #Normalization
     return vector/v_norm2
