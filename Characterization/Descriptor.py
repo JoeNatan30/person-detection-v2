@@ -163,7 +163,7 @@ def leer_xml(pos):
     
     base_path = os.path.dirname(os.path.realpath(__file__))
     
-    xml_file = os.path.join(base_path,'../../skeleton/Skeleton %d.xml'%pos)
+    xml_file = os.path.join(base_path,'../../datos/skeleton/Skeleton %d.xml'%pos)
     
     tree = et.parse(xml_file)
     

@@ -150,7 +150,7 @@ def init(pc,kdtree,rangeOfDiff, verbose):
     
 def ruido(rangeOfDiff, pos, verbose):
 
-    readDir = './../datos/inicial_%d.pcd'% pos
+    readDir = './../datos/inicial/inicial_%d.pcd'% pos
     writeDir = './sin_ruido_met2_3_%d.pcd'% pos
     
     #Lectura
