@@ -174,7 +174,8 @@ def leer_xml(pos):
 def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
     
     root = leer_xml(pos)
-    
+    print (root, "===========\")
+    print (pc.size,"=========|")
     partes_selec = {0:"Head", #cabeza = 0
                     1:"ShoulderCenter",2:"Spine", #torso = 1
                     3:"ElbowRight",4:"WristRight",5:"ElbowLeft",6:"WristLeft", #brazos = 2
