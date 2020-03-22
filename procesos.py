@@ -36,7 +36,7 @@ def segmentation(pos, pc, kdtree, v, verbose):
     if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
     kdtree_sin_out2 = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out2)
     
-    pc_sin_out2.to_file(str.encode('./segmentado_%d.pcd'%(pos)))
+    pc_sin_out2.to_file(str.encode('./../datos/segmentado/segmentado_%d.pcd'%(pos)))
     #pc_sin_out2.to_file('data/entrenamiento/segmentado/segmentado_%d.pcd'%(pos))
     
     return pc_sin_out2,kdtree_sin_out2
@@ -78,7 +78,7 @@ def guardar_datos_procesados(pos,data_x, data_y):
             
     dtp = pd.DataFrame(datos)
             
-    dtp.to_pickle('./procesado_%d.pkl'%pos)
+    dtp.to_pickle('./../datos/procesado/procesado_%d.pkl'%pos)
     
     #para leer el fpfh de un archivo
     #fpfh = pd.read_pickle('data/entrenamiento/fpfh_%d.pkl'%pos)

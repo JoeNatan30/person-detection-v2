@@ -26,7 +26,7 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
     #Position in the taken point cloud 
     for pos in range(num_puntos):
 
-        if (pos % 10000 == 0): print (pos, " en spfh")
+        if (pos % 10000 == 0): print (pos, "iteraciones en spfh")
         #Calcular puntos adyacentes
         punto_cercano, distancia = kdtree.nearest_k_search_for_point(pc,pos,
                                                                      cant)
@@ -118,7 +118,7 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
     
     #Position in the taken point cloud
     for pos in range(num_puntos):
-        if (pos % 10000 == 0): print (pos," en fpfh")
+        if (pos % 10000 == 0): print (pos,"iteraciones en fpfh")
         nearPoint, distancia = kdtree.nearest_k_search_for_point(pc,pos,
                                                                      cant)
         
