@@ -245,7 +245,8 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
                         pos_puntos_cercanos_skl, dist = kdtree.nearest_k_search_for_point(pc_coord,
                                                                             posicion,
                                                                             cant_puntos)
-                        
+                        if(pos_puntos_cercanos_skl.size == 0):
+                            print ("Descritor - near point group equal to zero")
                         #Se obtiene solo los point clouds del conjunto
                         pc_conj = pc.extract(pos_puntos_cercanos_skl)
                         
