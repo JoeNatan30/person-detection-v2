@@ -57,7 +57,7 @@ def reduceDistancePoint(pc,kdtree,v):
     newPc = pc.extract(nearPointIndexArray)
 
     #To avoid distance elimiation problem (this step its not important, just to reduce data)
-    if (nearPointIndex.count < 0.1* pc.size):
+    if (len(nearPointIndex) < 0.1* pc.size):
         return pc
     else:
         return newPc
