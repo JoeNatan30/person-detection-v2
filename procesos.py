@@ -24,14 +24,16 @@ def segmentation(pos, pc, kdtree, v, verbose):
    
     #pc, kdtree = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado2/segmentado_%d.pcd'%(pos))
     
-    if (verbose): print ("ReduceNoise.reduceDistancePoint")
-    pc_sin_out = ReduceNoise.reduceDistancePoint(pc_sin_seg,kdtree_sin_seg,v)
+    #if (verbose): print ("ReduceNoise.reduceDistancePoint")
+    #pc_sin_out = ReduceNoise.reduceDistancePoint(pc_sin_seg,kdtree_sin_seg,v)
     
-    if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
-    kdtree_sin_out = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out)
+    #if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
+    #kdtree_sin_out = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out)
     
+    ###
     if (verbose): print ("ReduceNoise.reduceDistancePoint")
-    pc_sin_out2 = ReduceNoise.reduceDistancePoint(pc_sin_out,kdtree_sin_out,v)
+    pc_sin_out2 = ReduceNoise.reduceDistancePoint(pc_sin_seg,kdtree_sin_seg,v)
+    ###
     
     if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
     kdtree_sin_out2 = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out2)

@@ -58,6 +58,7 @@ def reduceDistancePoint(pc,kdtree,v):
 
     #To avoid distance elimiation problem (this step its not important, just to reduce data)
     if (len(nearPointIndex) < 0.1* pc.size):
+        print ("Here is the Problem <<-------||<")
         return pc
     else:
         return newPc
