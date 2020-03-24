@@ -56,7 +56,11 @@ def reduceDistancePoint(pc,kdtree,v):
 
     newPc = pc.extract(nearPointIndexArray)
 
-    return newPc
+    #To avoid distance elimiation problem (this step its not important, just to reduce data)
+    if (nearPointIndex.count < 0.1* pc.size):
+        return pc
+    else:
+        return newPc
 
 ###############################################################################
 # Eliminacion de ruido por normales
