@@ -108,9 +108,8 @@ def getFunctionOfPlane(pc,pc_arr,listOfPoints,kdtree):
     
     punto_1 = pc_arr[listOfPoints[0]]
     punto_2 = pc_arr[listOfPoints[1]]
-    
-    #punto_3 = getFalsePoint(pc,pc_arr,listOfPoints,kdtree)
     punto_3 = pc_arr[listOfPoints[2]]
+    #punto_3 = getFalsePoint(pc,pc_arr,listOfPoints,kdtree)
     
     #Calcular la normal a partir de 3 puntos
     normal = getNormal(punto_1,punto_2,punto_3)
@@ -201,9 +200,10 @@ def ransac(pc,kdtree,rango):
         
     #Se le quita el segmento del total de puntos
     nuevo_arr = removeSegment(pc_arr,bestVolumeArr)
+    print ("before extract: ", totalPoints)
     pc_segmentado = pc.extract(nuevo_arr)
+    print ("after extract: ", pc_segmentado.size)
     kdtree_segmentado =pc_segmentado.make_kdtree_flann()
-    
     
     #pc_segmento = pc.extract(mejor_volumen)
     #pc_segmento.to_file('../data/segmento/seg.pcd')
@@ -222,10 +222,10 @@ def iniciar(pc,kdtree,v):
     else:
         rango = 0.07
     
-    print("rango = ",rango)
-    pc, kdtree = ransac(pc,kdtree,rango)
+    print("rango ransac = ",rango)
+    newPc, newKdtree = ransac(pc,kdtree,rango)
     
-    return pc, kdtree
+    return newPc, newKdtree
     
 ###############################################################################
 #Code - main
