@@ -55,14 +55,16 @@ def isWithinVolume(pc_arr,pos,f_x,rango):
     #  |A_x0 + B_y0 + C_z0 + D| 
     dividendo = RansacUtils.absolute(A_x0 + B_y0 + C_z0 + D)
    
-    divisor = f_x[0]**2 + f_x[1]**2 + f_x[2]**2
+    #because A^2+B^2+C^2 = (A+B+C)^2 - 2 * (AB+BC+AC)
+    #divisor = f_x[0]**2 + f_x[1]**2 + f_x[2]**2
+    divisor = (f_x[0]+f_x[1]+f_x[2])**2 - 2*(f_x[0]*f_x[1] + f_x[1]*f_x[2] + f_x[0]*f_x[2])
     
     if divisor == 0:
         divisor = 0.000000000001
     
-    distancia_cuadrada = dividendo / (divisor**(1/2))
+    distancia = dividendo / (divisor**(1/2))
 
-    if float(distancia_cuadrada) <  float(rango):
+    if float(distancia) <  float(rango):
         return True
     else:
         return False
@@ -109,7 +111,6 @@ def getFunctionOfPlane(pc,pc_arr,listOfPoints,kdtree):
     punto_1 = pc_arr[listOfPoints[0]]
     punto_2 = pc_arr[listOfPoints[1]]
     punto_3 = pc_arr[listOfPoints[2]]
-    #punto_3 = getFalsePoint(pc,pc_arr,listOfPoints,kdtree)
     
     #Calcular la normal a partir de 3 puntos
     normal = getNormal(punto_1,punto_2,punto_3)
