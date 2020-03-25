@@ -60,6 +60,7 @@ def isWithinVolume(pc_arr,pos,f_x,rango):
     divisor = (f_x[0]+f_x[1]+f_x[2])**2 - 2*(f_x[0]*f_x[1] + f_x[1]*f_x[2] + f_x[0]*f_x[2])
     
     if divisor == 0:
+        print("This is the problem?")
         divisor = 0.000000000001
     
     distancia = dividendo / (divisor**(1/2))
