@@ -30,18 +30,18 @@ def segmentation(pos, pc, kdtree, v, verbose):
     #if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
     #kdtree_sin_out = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out)
     
-    ###
-    if (verbose): print ("ReduceNoise.reduceDistancePoint")
-    pc_sin_out2 = ReduceNoise.reduceDistancePoint(pc_sin_seg,kdtree_sin_seg,v)
-    ###
+   
+    #if (verbose): print ("ReduceNoise.reduceDistancePoint")
+    #pc_sin_out2 = ReduceNoise.reduceDistancePoint(pc_sin_out,kdtree_sin_out,v)
+   
     
-    if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
-    kdtree_sin_out2 = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out2)
+    #if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
+    #kdtree_sin_out2 = KdtreeStructure.getKdtreeFromPointCloud(pc_sin_out2)
     
-    pc_sin_out2.to_file(str.encode('./../datos/segmentado/segmentado_%d.pcd'%(pos)))
+    pc_sin_seg.to_file(str.encode('./../datos/segmentado/segmentado_%d.pcd'%(pos)))
     #pc_sin_out2.to_file('data/entrenamiento/segmentado/segmentado_%d.pcd'%(pos))
     
-    return pc_sin_out2,kdtree_sin_out2
+    return pc_sin_seg, kdtree_sin_seg
 
 ###############################################################################
 def histograma(pc, kdtree, verbose):
