@@ -102,28 +102,26 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
             print("menor que: ",rangeOfDiff)
             
             #Ruido
-            if (verbose): print ("ReduceNoise.ruido")
+            if (verbose): print ("///////////////////////\nReduceNoise.ruido")
             pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
                     rangeOfDiff,
                     pos,
                     verbose)
             
-            print('Tamano Sin Ruido: ',pc_sin_ruido.size)
-            
             #segmentacion
-            if (verbose): print ("segmentation")
+            if (verbose): print ("///////////////////////\nsegmentation")
             pc_seg, kdtree_seg = segmentation(pos,pc_sin_ruido,
                                               kdtree_sin_ruido,
                                               version, verbose)
             print (pc_seg.size)
             
             #FPFH
-            if (verbose): print ("Histogram")
+            if (verbose): print ("///////////////////////\nHistogram")
             #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
             fpfh_list = histograma(pc_seg, kdtree_seg, verbose)
             
             #Descriptor
-            if (verbose): print ("Descriptor")
+            if (verbose): print ("///////////////////////\nDescriptor")
             dataset_X, dataset_Y, conj_extre = descripcion_train(pos,
                                                                  tamano, 
                                                                  fpfh_list,

@@ -140,7 +140,7 @@ def randomPoints(total):
     rand_3 = RansacUtils.randomIntBetween(0, total-1)
     
     #To avoid reapeted numbers
-    while (rand_1 == rand_2 == rand_3):
+    while (rand_1 == rand_2 or rand_1 == rand_3 or rand_2 == rand_3):
         rand_2 = RansacUtils.randomIntBetween(0, total-1)
         rand_3 = RansacUtils.randomIntBetween(0, total-1)
     
@@ -152,6 +152,7 @@ def randomPoints(total):
 def ransac(pc,kdtree,rango):
     
     pc_arr = pc.to_array()
+    
     
     #Variables fijas
     numInteractions = 0
