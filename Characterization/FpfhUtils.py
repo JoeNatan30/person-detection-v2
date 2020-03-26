@@ -12,6 +12,9 @@ def angleBetweenTwoVectors(v1_normalized,v2_normalized):
     #This dot return cosine of the angle
     cosineOfAngle = np.dot(v1_normalized,v2_normalized)
     
+    if (cosineOfAngle > 1 ): cosineOfAngle =  1
+    if (cosineOfAngle < -1): cosineOfAngle = -1
+    
     return math.acos(cosineOfAngle)
 
 """
