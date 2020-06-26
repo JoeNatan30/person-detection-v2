@@ -8,7 +8,7 @@ def entrenamiento(cant_PCD,porcentaje):
     dataset_y = []
     
     tope = cant_PCD * porcentaje / 100
-    
+
     for pos in range(cant_PCD):
     
         if(pos < tope):
@@ -43,7 +43,8 @@ def prueba(cant_PCD,porcentaje):
     for pos in range(cant_PCD):
   
         if(pos > base):
-            
+            if(pos==base-1):
+                print('Range of %d'%(pos))
             #Toma de datos procesados
             dtp = pd.read_pickle('./../datos/procesado/procesado_%d.pkl'%(pos))
         

@@ -96,7 +96,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
     
     for pos in range(cant_PCD):
         print (pos, cant_PCD, porcentaje)
-        if(rest == pos % max_paral and pos < tope):
+        if(rest == pos % max_paral and pos > 2706):
             
             print ("posicion: ", pos)
             print("menor que: ",rangeOfDiff)
@@ -201,7 +201,7 @@ def validacion_cruzada(cant, porcentaje, algoritmo, verbose):
     
     start_time = time.time()
     
-    if algoritmo == "rn":
+    if algoritmo == "svm":
         
         print ("inicio cross validation SVM")
         CrossValidation.optimize_svc(data_x,data_y)
