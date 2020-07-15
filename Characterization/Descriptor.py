@@ -163,7 +163,7 @@ def leer_xml(pos):
     
     base_path = os.path.dirname(os.path.realpath(__file__))
     
-    xml_file = os.path.join(base_path,'../../datos/skeleton/Skeleton %d.xml'%pos)
+    xml_file = os.path.join(base_path,'./../../datos/skeleton/Skeleton %d.xml'%pos)
     
     tree = et.parse(xml_file)
     
@@ -193,7 +193,7 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
     descriptionSet = []
     extremSet = []
     answerSet = []
-    
+   
     repeticiones = 1 #variable usada para la parte de equilibrar data
     
     indice_parte_cuerpo = -1 #Variable usada en conjunto_resp
@@ -238,15 +238,20 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
                         #Obtener el pc de los partes
                         pc_coord = pcl.PointCloud()
                         pc_coord.from_array(pcl_coord)
-                 
+                        
                         posicion = 0 #ya que solo tiene un valor pc_coord
                         
                         #Obtener los puntos cercanos del punto obtenido de Skeleton
                         pos_puntos_cercanos_skl, dist = kdtree.nearest_k_search_for_point(pc_coord,
                                                                             posicion,
                                                                             cant_puntos)
+                        
+                        #Se crea un nuevo fpfh a partir de los puntos cercanos
+                        newFPFH = DescriptorUtils.createNewFPFH(list_fpfh_point, pos_puntos_cercanos_skl)
+                       
                         if(pos_puntos_cercanos_skl.size == 0):
                             print ("Descritor - near point group equal to zero")
+                        
                         #Se obtiene solo los point clouds del conjunto
                         pc_conj = pc.extract(pos_puntos_cercanos_skl)
                         
@@ -254,17 +259,18 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
                         #Asi se evita tomar otros puntos externos al conjunto
                         kdtree_conj = pcl.KdTreeFLANN(pc_conj)
                         
-                        #Para equilibrar la data (segun zonasde del cuerpo)
+                        #Para equilibrar la data (segun zonas del cuerpo)
                         
                         #cabeza
                         if n_dic == 0: 
                             indice_parte_cuerpo = 0
                             repeticiones = 4
-                        
+
                         #torso
                         if n_dic == 1 or n_dic == 2: 
                             indice_parte_cuerpo = 1
                             repeticiones = 2
+                        
                         
                         #brazo
                         if n_dic == 3 or n_dic == 4 or n_dic == 5 or n_dic == 6: 
@@ -280,22 +286,21 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
                             
                             #Tomar un valor al azar del conjunto
                             pos_rand = randint(0,len(pos_puntos_cercanos_skl) - 1)
-                            punto_rand = pos_puntos_cercanos_skl[pos_rand]
-                            
+                           
                             #obtener los puntos cercanos al punto elegido
-                            punto_cercano, d = kdtree_conj.nearest_k_search_for_point(pc,
-                                                                 punto_rand,
+                            punto_cercano, d = kdtree_conj.nearest_k_search_for_point(pc_conj,
+                                                                 pos_rand,
                                                                  cant_puntos)
-
+                            
                             #Obtener el conjunto de descriptores y valores extremos del la seccion de puntos
                             descripcion, extrem = getExtremAndDescription(pc_conj,
-                                                                          list_fpfh_point,
+                                                                          newFPFH,
                                                                           punto_cercano)                            
-                            
+   
                             descriptionSet.append(descripcion)
                             extremSet.append(extrem)
                             answerSet.append(indice_parte_cuerpo) 
-               
+                            
     return descriptionSet, answerSet, extremSet
 
 ###############################################################################
@@ -312,9 +317,10 @@ def getExtremAndDescription(pc_arr, list_fpfh, punto_cercano):
     z_min =  np.inf
     z_max = -np.inf
 
-    for pos in punto_cercano:
+    #El indice de cada punto cercano
+    for ind in punto_cercano:
         
-        punto = pc_arr[pos]
+        punto = pc_arr[ind]
         
         x_min, x_max = DescriptorUtils.getExtremValues(punto[0], x_min, x_max)
         y_min, y_max = DescriptorUtils.getExtremValues(punto[1], y_min, y_max)
@@ -322,8 +328,7 @@ def getExtremAndDescription(pc_arr, list_fpfh, punto_cercano):
         
         for gri in range(3):
 
-            
-            valor = list_fpfh[pos][gri]            
+            valor = list_fpfh[ind][gri]            
             descripcion.append(valor)
             
             '''
@@ -351,7 +356,7 @@ def getExtremAndDescription(pc_arr, list_fpfh, punto_cercano):
 def getDescriptorSet(fpfhSet, pc, tamano_pc, NumPoints):
 
     #Cantidad de conjunto de puntos en una imagen
-    cant_conjuntos = tamano_pc / NumPoints
+    cant_conjuntos = int(tamano_pc / NumPoints)
     
     pointSet = []
     indexSet = []
@@ -382,10 +387,16 @@ def getDescriptorSet(fpfhSet, pc, tamano_pc, NumPoints):
         #conjunto de puntos extremos de cada conjunto de descriptores
         extremSet.append(extremos)
         
+        #Quita los puntos que se quitarán del fpfh
+        notUsedInd = DescriptorUtils.erraseUsedPointInArray(pc.size,nearPoint)
+        
         #Eliminar la seccion revisada para no volver a considerarlo
         nuevo_arr_pc = quitar_segmento(pc_arr,nearPoint)
         pc = pc.extract((nuevo_arr_pc))
-    
+        
+        #Reorganiza los FPFH al nuevo pc
+        fpfhSet = DescriptorUtils.createNewFPFH(fpfhSet, notUsedInd)
+        
         #pc.to_file('parte_%d.pcd'% cont)
         
     return pointSet, indexSet, extremSet

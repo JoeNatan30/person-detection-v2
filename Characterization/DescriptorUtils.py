@@ -13,7 +13,26 @@ def isInTheRange(valor,minimo,maximo):
         return True
     else:
         return False
+
+def erraseUsedPointInArray(size, usedPointIndex):
     
+    notUsedInd = []
+    
+    for val in np.arange(size):
+        
+        if not(val in usedPointIndex):
+            notUsedInd.append(val)
+    
+    return np.array(notUsedInd)
+
+def createNewFPFH(fpfh, new_list_ind):
+    
+    fpfh_list = []
+    
+    for pos in new_list_ind:
+        fpfh_list.append(fpfh[pos])
+    
+    return np.array(fpfh_list)
 
 def getExtremValues(valor,minimo,maximo):
     

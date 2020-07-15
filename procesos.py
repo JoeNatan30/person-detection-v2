@@ -56,7 +56,7 @@ def histograma(pc, kdtree, verbose):
 def descripcion(fpfh, tamano, pc, verbose):
 
     if (verbose): print ("Descriptor.inicio")
-    conj_fpfh, conj_ind, conj_extr = Descriptor.inicio(fpfh, pc, tamano)
+    conj_fpfh, conj_ind, conj_extr = Descriptor.inicio(fpfh, pc, tamano, verbose)
     
     return conj_fpfh, conj_ind, conj_extr
 
@@ -72,6 +72,15 @@ def descripcion_train(pos,tamano, fpfh,pc, kdtree, verbose):
                                                                             tamano)
     
     return dataset_X, dataset_Y, conj_extre
+
+def guardar_datos_reales(pos,data_x):
+    
+    datos = {'histograma':data_x}
+            
+    dtp = pd.DataFrame(datos)
+            
+    dtp.to_pickle('./../datos/real/real%d.pkl'%pos)
+
 
 ###############################################################################
 def guardar_datos_procesados(pos,data_x, data_y):
@@ -96,11 +105,12 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
     
     for pos in range(cant_PCD):
         print (pos, cant_PCD, porcentaje)
-        if(rest == pos % max_paral and pos > 2706):
+        if(rest == pos % max_paral and pos < tope):
             
             print ("posicion: ", pos)
             print("menor que: ",rangeOfDiff)
             
+            '''
             #Ruido
             if (verbose): print ("///////////////////////\nReduceNoise.ruido")
             pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
@@ -114,10 +124,11 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                                               kdtree_sin_ruido,
                                               version, verbose)
             print (pc_seg.size)
+            '''
             
             #FPFH
             if (verbose): print ("///////////////////////\nHistogram")
-            #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
+            pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('./../datos/segmentado/segmentado_%d.pcd'%pos)
             fpfh_list = histograma(pc_seg, kdtree_seg, verbose)
             
             #Descriptor
@@ -147,27 +158,27 @@ def procesamiento_real(cant_PCD, porcentaje, tamano, version,
     for pos in range(cant_PCD):
          
         if(rest == pos % max_paral and pos > base):
-        
-            print (pos)
             
+            print (pos)
+            '''
             #Ruido
-            pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
+            #pc_sin_ruido, kdtree_sin_ruido = ReduceNoise.ruido(
                     rangeOfDiff,
                     pos,
                     verbose)
             
             #segmentacion        
             pc_seg, kdtree_seg = segmentation(pos,pc_sin_ruido, kdtree_sin_ruido,version)
-            
+            '''
             #FPFH
-            #pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('data/entrenamiento/segmentado/segmentado_%d.pcd'%pos)
-            fpfh_list = histograma(pc_seg, kdtree_seg)
+            pc_seg, kdtree_seg = KdtreeStructure.getKdtreeFromPointCloudDir('./../datos/segmentado/segmentado_%d.pcd'%pos)
+            fpfh_list = histograma(pc_seg, kdtree_seg, verbose)
             
             #Descriptor
-            dataset_X, dataset_Y, conj_extre = descripcion(fpfh_list,tamano,pc_seg)
+            dataset_X, dataset_Y, conj_extre = descripcion(fpfh_list,tamano,pc_seg, verbose)
             
             #Guardado
-            guardar_datos_procesados(pos,dataset_X,dataset_Y)
+            guardar_datos_reales(pos,dataset_X)
 
 ###############################################################################
 def entrenamiento(cant, porcentaje, algoritmo, verbose):
@@ -251,5 +262,4 @@ def medition(cant_PCD,tamano_conjunto, version,
     
     print ("medicion de " + tipo)
     for pos in range(cant_PCD):
-        
         ReduceNoise.medition(rangeOfDiff,pos,tipo,precision,verbose)

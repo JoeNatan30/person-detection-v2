@@ -129,7 +129,7 @@ def init(pc,kdtree,rangeOfDiff, verbose):
     if (verbose): print ("ReduceNoiseUtils.directionOfNormals")
     normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormals(pc,kdtree)
     
-    #El nuevo Point cloud sin planos
+    #Se genera un nuevo Point cloud sin planos
     if (verbose): print ("removeSimilarPointsUsingNormals")
     pcWithoutFlatPart= removeSimilarPointsUsingNormals(
             pc,
@@ -142,8 +142,6 @@ def init(pc,kdtree,rangeOfDiff, verbose):
     
     #Se limpia de los outliears
     cleansedPc = reduceDistancePoint(pcWithoutFlatPart, kdtreeWithoutFlatPart,verbose)
-    writeDir = './sin_plano_x.pcd'
-    cleansedPc.to_file(str.encode(writeDir))
     
     #Nuevo kdtree sin ruido
     cleansedkdtree = KdtreeStructure.getKdtreeFromPointCloud(cleansedPc)

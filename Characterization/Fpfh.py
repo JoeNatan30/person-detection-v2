@@ -187,7 +187,7 @@ def inicio(pc, kdtree, verbose):
                                           cantidad)
     if (verbose): print ("FPFH")
     list_point_fpfh = fpfh(pc, kdtree, listSpfhPoint, numPoints, cantidad)
-
+    
     return list_point_fpfh
 ###############################################################################
 
