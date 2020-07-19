@@ -188,13 +188,11 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
 
     cant_partes = len(partes_selec)
     
-    #pc_arr = pc.to_array() #Point cloud de la data convertido en array
+    pc_arr = pc.to_array() #Point cloud de la data convertido en array
     
     descriptionSet = []
     extremSet = []
     answerSet = []
-   
-    repeticiones = 1 #variable usada para la parte de equilibrar data
     
     indice_parte_cuerpo = -1 #Variable usada en conjunto_resp
     # -1 = nulo
@@ -233,68 +231,61 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
                         coord_arr = DescriptorUtils.operations(x,y,z)
                         
                         #Se convierte en arreglo de dos dimensiones
-                        pcl_coord = np.array([coord_arr],dtype = 'float32')
+                        pcl_one_coord = np.array([coord_arr],dtype = 'float32')
                         
                         #Obtener el pc de los partes
-                        pc_coord = pcl.PointCloud()
-                        pc_coord.from_array(pcl_coord)
+                        pc_one_coord = pcl.PointCloud()
+                        pc_one_coord.from_array(pcl_one_coord)
                         
                         posicion = 0 #ya que solo tiene un valor pc_coord
                         
                         #Obtener los puntos cercanos del punto obtenido de Skeleton
-                        pos_puntos_cercanos_skl, dist = kdtree.nearest_k_search_for_point(pc_coord,
+                        pos_puntos_cercanos_skl, dist = kdtree.nearest_k_search_for_point(pc_one_coord,
                                                                             posicion,
                                                                             cant_puntos)
-                        
-                        #Se crea un nuevo fpfh a partir de los puntos cercanos
-                        newFPFH = DescriptorUtils.createNewFPFH(list_fpfh_point, pos_puntos_cercanos_skl)
-                       
-                        if(pos_puntos_cercanos_skl.size == 0):
-                            print ("Descritor - near point group equal to zero")
-                        
-                        #Se obtiene solo los point clouds del conjunto
-                        pc_conj = pc.extract(pos_puntos_cercanos_skl)
-                        
-                        #preparar un kdtree de solo los conjuntos
-                        #Asi se evita tomar otros puntos externos al conjunto
-                        kdtree_conj = pcl.KdTreeFLANN(pc_conj)
-                        
+                        ####
                         #Para equilibrar la data (segun zonas del cuerpo)
                         
                         #cabeza
                         if n_dic == 0: 
                             indice_parte_cuerpo = 0
-                            repeticiones = 4
+                            numVariation = 4
+                            #Tomar un valor al azar del conjunto de puntos cercanos
+                            variationPointInd = [randint(0, cant_puntos - 1) for _ in range(numVariation)]
+                            
 
                         #torso
                         if n_dic == 1 or n_dic == 2: 
                             indice_parte_cuerpo = 1
-                            repeticiones = 2
-                        
+                            numVariation = 2
+                            #Tomar un valor al azar del conjunto de puntos cercanos
+                            variationPointInd = [randint(0, cant_puntos - 1) for _ in range(numVariation)]
                         
                         #brazo
                         if n_dic == 3 or n_dic == 4 or n_dic == 5 or n_dic == 6: 
                             indice_parte_cuerpo = 2
-                            repeticiones = 1
+                            #No variation
+                            variationPointInd = [0] #index of the first point selected
                             
                         #pierna 
                         if n_dic == 7 or n_dic == 8 or n_dic == 9 or n_dic == 10: 
                             indice_parte_cuerpo = 3
-                            repeticiones = 1
+                             #No variation
+                            variationPointInd = [0] #index of the first point selected
                             
-                        for veces in range(repeticiones):
+                        for pointInd in variationPointInd:
                             
-                            #Tomar un valor al azar del conjunto
-                            pos_rand = randint(0,len(pos_puntos_cercanos_skl) - 1)
-                           
                             #obtener los puntos cercanos al punto elegido
-                            punto_cercano, d = kdtree_conj.nearest_k_search_for_point(pc_conj,
-                                                                 pos_rand,
+                            punto_cercano, d = kdtree.nearest_k_search_for_point(pc,
+                                                                 pos_puntos_cercanos_skl[pointInd],
                                                                  cant_puntos)
                             
+                            
+                       
+                      
                             #Obtener el conjunto de descriptores y valores extremos del la seccion de puntos
-                            descripcion, extrem = getExtremAndDescription(pc_conj,
-                                                                          newFPFH,
+                            descripcion, extrem = getExtremAndDescription(pc_arr,
+                                                                          list_fpfh_point,
                                                                           punto_cercano)                            
    
                             descriptionSet.append(descripcion)
@@ -306,7 +297,9 @@ def obtener_descriptores_train(pos,list_fpfh_point, pc, kdtree,cant_puntos):
 ###############################################################################
 def getExtremAndDescription(pc_arr, list_fpfh, punto_cercano):
     
-    descripcion = []    
+    alpha = []
+    phi   = []
+    theta = []
     
     x_min =  np.inf
     x_max = -np.inf
@@ -326,29 +319,18 @@ def getExtremAndDescription(pc_arr, list_fpfh, punto_cercano):
         y_min, y_max = DescriptorUtils.getExtremValues(punto[1], y_min, y_max)
         z_min, z_max = DescriptorUtils.getExtremValues(punto[2], z_min, z_max)
         
-        for gri in range(3):
-
-            valor = list_fpfh[ind][gri]            
-            descripcion.append(valor)
-            
-            '''
-            if(gri == 0):
-                valor -= min_0
-                valor /= (max_0 - min_0)
-                descripcion.append(valor)
-
-            if(gri == 1):
-                valor -= min_1
-                valor /= (max_1 - min_1)
-                descripcion.append(valor)
-
-            if(gri == 2):
-                valor -= min_2
-                valor /= (max_2 - min_2)
-                descripcion.append(valor)
-            '''
+        alpha.append(list_fpfh[ind][0])
+        phi.append(list_fpfh[ind][1])
+        theta.append(list_fpfh[ind][2])
+    
     #orden x,y,z (min) + x,y,z (max)
     extremValues = [x_min, y_min, z_min, x_max, y_max, z_max]
+    
+    alpha_hist, alpha_bin_edges = np.histogram(alpha, bins=40, range=(0.0, 4.0), density=True)
+    phi_hist,   phi_bin_edges   = np.histogram(phi,   bins=40, range=(0.0, 4.0), density=True)
+    theta_hist, theta_bin_edges = np.histogram(theta, bins=40, range=(0.0, 4.0), density=True)
+    
+    descripcion = np.concatenate([alpha_hist,phi_hist,theta_hist])
     
     return np.array(descripcion), np.array(extremValues)
     

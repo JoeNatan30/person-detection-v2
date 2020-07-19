@@ -87,4 +87,4 @@ def main(proceso,tipo):
             "prueba"
 """
 #main("medicion","ruido-normalPrecision")
-main("procesamiento_real","")
+main("procesamiento_train","")
