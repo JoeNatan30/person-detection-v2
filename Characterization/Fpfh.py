@@ -17,7 +17,6 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
     
     pc_arr = pc.to_array()
     
-    print  (pc_arr)
     spfhPoint = []
 
     theta_comp_1 = 0.0
@@ -44,54 +43,90 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
             if(ind > 0): 
                 
                 #To avoid taking a far point
-                if(distancia[ind] < 10.0): 
+                if(distancia[ind] < 3.0): 
                     
                     numberOfPointsConsidered += 1
                     pos_adyacente = punto_cercano[ind]
                     
                     ########################
+                    #Select source and tarjet
+                    
+                    #First - get the angle of the point "pos" with its normal
+                    pppi = pc_arr[pos_adyacente] - pc_arr[pos]
+                    pppi_normalized = FpfhUtils.vectorNormalization(pppi)
+                    
+                    n_p_normalized = FpfhUtils.vectorNormalization(normal_arr[pos])
+                    
+                    angle_p = FpfhUtils.angleBetweenTwoVectors(n_p_normalized, pppi_normalized) # p = pos
+                    
+                    #Second - get the angle of the point "ind" with its normal
+                    pipp = pc_arr[pos] - pc_arr[pos_adyacente]
+                    pipp_normalized = FpfhUtils.vectorNormalization(pipp)
+                    
+                    n_i_normalized = FpfhUtils.vectorNormalization(normal_arr[pos_adyacente])
+                    
+                    angle_i = FpfhUtils.angleBetweenTwoVectors(n_i_normalized, pipp_normalized) # i = ind
+                    
+                    #Compare both angle to get to know the point source and target
+                    if(angle_p <= angle_i):
+                        
+                        p_s = pc_arr[pos]
+                        p_t = pc_arr[pos_adyacente]
+                        
+                        n_s = normal_arr[pos]
+                        n_t = normal_arr[pos_adyacente]
+                    
+                    else:
+                        
+                        p_s = pc_arr[pos_adyacente]
+                        p_t = pc_arr[pos]
+                        
+                        n_s = normal_arr[pos_adyacente]
+                        n_t = normal_arr[pos]
+                        
+                    ########################
                     #FPFH Operations SECTION
                     
-                    #Normal of the second point
-                    normal_sig = normal_arr[pos_adyacente]
-                    n_sig_normalized = FpfhUtils.vectorNormalization(normal_sig)
+                    #Both normals normalized
+                    n_s_normalized = FpfhUtils.vectorNormalization(n_s)
+                    n_t_normalized = FpfhUtils.vectorNormalization(n_t)
                     
-                    #U vector
-                    u = normal_arr[pos]  # u = n_s
-                    u_normalized = FpfhUtils.vectorNormalization(u)
+                    #U vector (normalized)
+                    u_normalized = n_s_normalized  # u = n_s
                     
                     #Distance vector between the actual point an the near point
-                    pspt = pc_arr[pos_adyacente] - pc_arr[pos]  # P_t - P_s
+                    pspt = p_t - p_s  # P_t - P_s
                     pspt_normalized = FpfhUtils.vectorNormalizationNorm2(pspt)
 
                     #V vector                    
-                    #v = u x (P_t - P_s)/||(P_t - P_s)|| [de orden 2]
-                    v = np.cross(u,pspt_normalized) 
+                    #v = (P_t - P_s) x u
+                    v = np.cross(pspt_normalized,u_normalized) 
                     v_normalized = FpfhUtils.vectorNormalization(v)
                     
                     #W vector
-                    w = np.cross(u,v) # w = u x v
+                    w = np.cross(u_normalized,v_normalized) # w = u x v
                     w_normalized = FpfhUtils.vectorNormalization(w)
+                    
+                    
                     
                     #Alpha angle
                     alpha = FpfhUtils.angleBetweenTwoVectors(
                             v_normalized,
-                            n_sig_normalized)
+                            n_t_normalized)
                       
                     #phi angle
                     phi = FpfhUtils.angleBetweenTwoVectors(
                             u_normalized,pspt_normalized)
 
                     #Theta angle
-                    theta_comp_1 = np.dot(w_normalized,n_sig_normalized) #comp_1 = w . n_t
-                    theta_comp_2 = np.dot(u_normalized,n_sig_normalized) #comp_2 = u . n_t
+                    theta_comp_1 = np.dot(w_normalized,n_t_normalized) #comp_1 = w . n_t
+                    theta_comp_2 = np.dot(u_normalized,n_t_normalized) #comp_2 = u . n_t
                     
                     theta = math.atan2(theta_comp_1,theta_comp_2) # theta = arctan( w . n_t ; u . n_t)
                     
-                    #To avoid negative angle
-                    if alpha < 0: alpha = -alpha
-                    if phi   < 0: phi   = -phi
-                    if theta < 0: theta = -theta
+                    alpha = abs(alpha)
+                    phi   = abs(phi)
+                    theta = abs(theta)
                     
                     #To save SPFH's components (accumulate)
                     spfhComponents[0] += alpha
@@ -101,9 +136,6 @@ def spfh(pc, kdtree, normal_arr, num_puntos, cant):
         #Division entre la cantidad de puntos adyacentes      
         spfhComponents /= numberOfPointsConsidered
         
-        if (spfhComponents[0]<0): print(spfhComponents[0])
-        if (spfhComponents[1]<0): print(spfhComponents[1])
-        if (spfhComponents[2]<0): print(spfhComponents[2])
         #To save point's components 
         spfhPoint.append(spfhComponents)
 
@@ -118,6 +150,7 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
     
     #Position in the taken point cloud
     for pos in range(num_puntos):
+        
         if (pos % 10000 == 0): print (pos,"iteraciones en fpfh")
         nearPoint, distancia = kdtree.nearest_k_search_for_point(pc,pos,
                                                                      cant)
@@ -134,21 +167,21 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
             #To avoid taking the same point two times
             if(ind>0):
                 
-                #To avoid taking a far point
-                if(distancia[ind] < 10.0):   
-                    
+                 #To avoid taking a far point
+                if(distancia[ind] < 3.0): 
+                
                     numberOfPointsConsidered += 1
-                    
+                        
                     pos_adyacente = nearPoint[ind]
-                    
+                        
                     '''
                     Exponential is used to have better ponderation because
                     distance value is frequently less than 1
                     '''
-                    weigh = math.exp(distancia[ind])
-                             
-                    nearSpfh = np.array(list_spfh[pos_adyacente])
+                    weigh = math.sqrt(math.exp(distancia[ind]))
                     
+                    nearSpfh = np.array(list_spfh[pos_adyacente])
+                        
                     #ponder components of spfh
                     spfh_general_adyacente += nearSpfh/weigh        
         
@@ -162,7 +195,7 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
         fpfh += spfh_general_adyacente
         
         #modify fpfh components to have it normalized
-        fpfh = FpfhUtils.componentsNormalization(fpfh)
+        #fpfh = FpfhUtils.componentsNormalization(fpfh)
      
         #add to list FPFH
         list_fpfh.append(fpfh)
@@ -176,19 +209,21 @@ def fpfh(pc, kdtree, list_spfh, num_puntos, cant):
 ###############################################################################
 def inicio(pc, kdtree, verbose):
 
-    cantidad = 10 #puntos (salen 2 normales menos al valor indicado en cantidad)
-  
+    cantidad = 80 #puntos (salen 2 normales menos al valor indicado en cantidad)
+    cantidad_fpfh = 40
    
     if (verbose): print ("normal.getNormalDirection")
     normalArr, normalIndex = normal.getNormalDirection(pc,kdtree,cantidad)
     
     if (verbose): print ("SPFH")
     listSpfhPoint, numPoints = spfh(pc, kdtree, normalArr, len(normalIndex),
-                                          cantidad)
+                                          cantidad_fpfh)
     if (verbose): print ("FPFH")
-    list_point_fpfh = fpfh(pc, kdtree, listSpfhPoint, numPoints, cantidad)
+    arr_point_fpfh = fpfh(pc, kdtree, listSpfhPoint, numPoints, cantidad_fpfh)
     
-    return list_point_fpfh
+    #
+    
+    return arr_point_fpfh
 ###############################################################################
 
 

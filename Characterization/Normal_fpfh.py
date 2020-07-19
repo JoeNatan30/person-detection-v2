@@ -16,13 +16,11 @@ def computeNormalMagnitude(normal):
     
 def fixNormalDirection(normal,punto):
     
-    suma = 0
     vector_view_punto = -1 * punto #because it's known the viewPoint as (0,0,0)
     
-    for pos in range(3):
-        suma = suma + (normal[pos] * vector_view_punto[pos])
+    result = np.dot(vector_view_punto,normal)
     
-    if suma >= 0:
+    if result >= 0:
         return normal
     else:
         return -1*normal
@@ -55,6 +53,20 @@ def estimationOfNormals(pc_array,punto_cercano, cantidad):
             
             if j < cantidad - 1:
                 
+                normal_intermedia = computeNormal(pc_array,punto_cercano,
+                                                    j,j+1)
+                
+                suma_normal += normal_intermedia
+                
+                cont = cont + 1
+
+    '''
+    for j in range(cantidad):
+        #Para no tomar el primer valor que es del mismo punto
+        if j > 0:
+            
+            if j < cantidad - 1:
+                
                for k in range(cantidad):
                    
                 if k + j + 1 >= cantidad: break #en caso salga del rango
@@ -69,7 +81,7 @@ def estimationOfNormals(pc_array,punto_cercano, cantidad):
                 cont += 1
 
 
-    '''En caso se necesite obtener una relacion completa entre todos los puntos
+    En caso se necesite obtener una relacion completa entre todos los puntos
     for j in range(cantidad):
         
         if j > 0:
@@ -114,8 +126,6 @@ def getNormalDirection(pc,kdtree,cant):
             
             normal = estimationOfNormals(pc_array,nearPoint,cant)
             
-            normales.append(normal)
-            
             normalMagnitude = computeNormalMagnitude(normal)
             
             if normalMagnitude != 0:
@@ -129,8 +139,8 @@ def getNormalDirection(pc,kdtree,cant):
                 normal [0] = 0.0000000000001
                 normal [1] = 0.0000000000001
                 normal [2] = 0.0000000000001
+                normales.append(normal)
                 
-            
     normales_array = np.asarray(normales)
     return normales_array, normal_indices
 '''
