@@ -105,7 +105,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
     
     for pos in range(cant_PCD):
         print (pos, cant_PCD, porcentaje)
-        if(rest == pos % max_paral and pos < tope):
+        if(rest == pos % max_paral and pos > 3585 and pos < 3666):
             
             print ("posicion: ", pos)
             print("menor que: ",rangeOfDiff)
@@ -117,6 +117,7 @@ def procesamiento_train(cant_PCD, porcentaje, tamano, version,
                     rangeOfDiff,
                     pos,
                     verbose)
+
             
             #segmentacion
             if (verbose): print ("///////////////////////\nsegmentation")
@@ -184,7 +185,7 @@ def procesamiento_real(cant_PCD, porcentaje, tamano, version,
 def entrenamiento(cant, porcentaje, algoritmo, verbose):
 
     data_x, data_y = Procesados.entrenamiento(cant,porcentaje)
-    
+    data_x = data_x
     start_time = time.time()
 
     if algoritmo == "svm":
@@ -207,8 +208,8 @@ def entrenamiento(cant, porcentaje, algoritmo, verbose):
 
 ###############################################################################
 def validacion_cruzada(cant, porcentaje, algoritmo, verbose):
-    
-    data_x , data_y = Procesados.prueba(cant,porcentaje)
+    print("cargar datos")
+    data_x , data_y = Procesados.entrenamiento(cant,porcentaje)
     
     start_time = time.time()
     

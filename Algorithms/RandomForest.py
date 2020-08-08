@@ -1,4 +1,3 @@
-#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
 Created on Sat Oct 27 23:38:14 2018
@@ -11,6 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.metrics import confusion_matrix, precision_score
 from sklearn.metrics import precision_recall_fscore_support as score
+from sklearn.multiclass import OneVsRestClassifier
 #import matplotlib.pyplot as plt
 from pandas_ml import ConfusionMatrix
 import pandas as pd
@@ -41,10 +41,16 @@ def inicio_ejemplo(var):
 
 def entrenar(X, y):
     
-    rf = RandomForestClassifier(n_estimators=1833, min_samples_split=54,verbose=1)
+    rf = OneVsRestClassifier(RandomForestClassifier(
+                             n_estimators= int(480.5),
+                             min_samples_split=int(5.339),
+                             max_features=0.5987,
+                             verbose=1,
+                             n_jobs=-1)
+         ,n_jobs=-1)
     modelo = rf.fit(X, y)
     
-    modelo_filename = 'rf_new_esPartePersona.pkl'
+    modelo_filename = 'rf_ovr_esPartePersona.pkl'
     #decision_tree_model_pkl = open(modelo_filename, 'wb')
     joblib.dump(modelo, modelo_filename)
     # Close the pickle instances
@@ -56,18 +62,18 @@ def predecir(X_test, y_test):
 
     #print "modelo pkl"
     modelo_filename = 'rf_new_esPartePersona.pkl'
-    #modelo = open(modelo_filename, 'rb')
-    svm_rbf = joblib.load(modelo_filename)
+    #rf_model = open(modelo_filename, 'rb')
+    rf_model = joblib.load(modelo_filename)
     
-    y_pred = svm_rbf.predict(X_test)
+    y_pred = rf_model.predict(X_test)
     
-    y_score = svm_rbf.predict_proba(X_test)
+    y_score = rf_model.predict_proba(X_test)
         
     y_true = y_test
     
-    #print y_pred
-    #print y_test
-    #print y_score
+    #print(y_pred)
+    #print(y_test)
+    #print(y_score)
 
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 500)
@@ -77,8 +83,9 @@ def predecir(X_test, y_test):
     cm = ConfusionMatrix(y_test, y_pred)
     cm.print_stats()
     cm.stats()
+
     '''
-    arr = [0,0,0,0] 
+    arr = [0,0,0,0]
     matrix = []
     matrix.append(arr)
     matrix.append(arr)

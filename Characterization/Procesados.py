@@ -24,6 +24,10 @@ def entrenamiento(cant_PCD,porcentaje):
                 
                 dataset_x.append(dtp['histograma'][ind])
                 dataset_y.append(dtp['es'][ind])
+                #if(dtp['es'][ind]== 3):
+                #    dataset_y.append(1)
+                #else:
+                #    dataset_y.append(0)
 
     #conversion a numpy array
     dataset_X_arr = np.array(dataset_x)
@@ -47,7 +51,6 @@ def prueba(cant_PCD,porcentaje):
                 print('Range of %d'%(pos))
             #Toma de datos procesados
             dtp = pd.read_pickle('./../datos/procesado/procesado_%d.pkl'%(pos))
-        
             #Longitud del arreglo tomado
             longit = len(dtp['es'])
 
@@ -56,6 +59,10 @@ def prueba(cant_PCD,porcentaje):
              
                 dataset_x.append(dtp['histograma'][ind])
                 dataset_y.append(dtp['es'][ind])
+                #if(dtp['es'][ind]==3):
+                #    dataset_y.append(1)
+                #else:
+                #    dataset_y.append(0)
 
     #conversion a numpy array
     dataset_X_arr = np.array(dataset_x)

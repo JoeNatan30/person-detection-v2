@@ -7,6 +7,7 @@ Created on Wed Oct 10 16:26:25 2018
 """
 	
 from sklearn.externals import joblib
+from sklearn.multiclass import OneVsOneClassifier
 import numpy as np
 from pandas_ml import ConfusionMatrix
 #import matplotlib.pyplot as plt
@@ -60,22 +61,22 @@ def inicio_ejemplo(var):
 
 def entrenar(X, y): #dataset_train, resultados, dataset_realdataset_real
         
-    svm_rbf = svm.SVC(kernel='rbf',verbose = 1,C=0.1,gamma=0.1)
+    svm_rbf = svm.SVC(kernel='rbf',verbose = 1,C=2**3,gamma=2**-3.1)
     svm_rbf.probability = True
 
     modelo = svm_rbf.fit(X, y)
     
-    modelo_filename = 'svm_new_esPartePersona.pkl'
+    modelo_filename = 'svm_bin_esPartePersona.pkl'
     joblib.dump(modelo, modelo_filename)
 
 def predecir(X_test, y_test):
 
-    modelo_filename = 'svm_new_esPartePersona.pkl'
+    modelo_filename = 'svm_bin_esPartePersona.pkl'
     svm_rbf = joblib.load(modelo_filename)
     
     y_pred = svm_rbf.predict(X_test)
     
-    y_score = svm_rbf.predict_proba(X_test)
+    #y_score = svm_rbf.predict_proba(X_test)
     y_true = y_test
     
     

@@ -9,14 +9,14 @@ import procesos
 
 def main(proceso,tipo):
     
-    cant_PCD = 4000         # numero total de archivos de datos sin procesar
-    porcentaje = 75         # porcentaje para el training
+    cant_PCD =  4000         # numero total de archivos de datos sin procesar
+    porcentaje = 80        # porcentaje para el training
     #tamano_conjunto = 300   # tamano del conjunto de puntos a tomar
     tamano_conjunto = 800   # tamano del conjunto de puntos a tomar
-    algoritmo = "svm"       # "svm" "rf" "rn"
+    algoritmo = "rf"       # "svm" "rf" "rn"
     version = 1             # version del kinect
     max_proces_paral = 4    # Maximo de procesos paralelos (se cuenta desde cero)
-    pos_proces_paral = 0    # posicion de procesos paralelos (debe inicar en cero)
+    pos_proces_paral = 2    # posicion de procesos paralelos (debe inicar en cero)
     #rangeOfDiff = 0.0000000149     # Range of Difference used during normal calculation
     rangeOfDiff = 0.000000014889
     normalPresicion = 7
@@ -87,4 +87,4 @@ def main(proceso,tipo):
             "prueba"
 """
 #main("medicion","ruido-normalPrecision")
-main("procesamiento_train","")
+main("validacion_cruzada","")

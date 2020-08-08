@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, precision_score
 from sklearn.metrics import roc_auc_score, roc_curve
+from sklearn.multiclass import OneVsOneClassifier
 from pandas_ml import ConfusionMatrix
 import pandas as pd
 #import matplotlib.pyplot as plt
@@ -30,7 +31,13 @@ def inicio_ejemplo(var):
 
 def entrenar(X, y):
     
-    clf = MLPClassifier(solver='sgd',learning_rate ='adaptive',verbose=1,hidden_layer_sizes = (2398),max_iter=995)
+    clf = OneVsOneClassifier(MLPClassifier(solver='adam',
+                                           alpha=0.002342,
+                                           beta_1=0.1, beta_2=0.1,
+                                           verbose=1,
+                                           hidden_layer_sizes = (20,663),
+                                           max_iter=900),
+                             n_jobs = -1)
     modelo = clf.fit(X, y)
     
     modelo_filename = 'nn_new_esPartePersona.pkl'
@@ -48,7 +55,7 @@ def predecir(X_test, y_test):
     
     y_pred = mpl.predict(X_test)
     
-    y_score = mpl.predict_proba(X_test)
+    #y_score = mpl.predict_proba(X_test)
     
     y_true = y_test
     
