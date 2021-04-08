@@ -12,81 +12,81 @@ import time
 from NoiseReduction import ReduceNoiseUtils
 from NoiseReduction import KdtreeStructure
 
+import pandas as pd
+import matplotlib.pyplot as ptl
+from mpl_toolkits.mplot3d import Axes3D
+
+
 ###############################################################################
 # Eliminacion ruido por distancias
 ###############################################################################
-def reduceDistancePoint(pc,kdtree,v):
-    
-    pc_array = pc.to_array()
-    
-    if v==1:
+def reduceDistancePoint(pcd, kdtree, v):
+
+    pointsArr = ReduceNoiseUtils.getArrFromPcd(pcd.points)
+    normalsArr = ReduceNoiseUtils.getArrFromPcd(pcd.normals)
+
+    if v == 1:
         rango = 0.7
         num_punt = 5
     else:
         rango = 0.005
         num_punt = 5
-   
-    nearPointIndex = []
-    
+
+    newPoints = []
+    newNormals = []
     '''
     The idea of this "For" is to save all out of range index points
     and then extract these from the point cloud
     '''
-    for pos in range(pc.size):
-        
-        #Si no es una coordenada vacia
-        if not math.isnan(pc_array[pos][0]):
-            
-            #Get near points
-            nearPoint, distance = kdtree.nearest_k_search_for_point(pc,pos,
-                                                                    num_punt*2)
+    for pos, point in enumerate(pointsArr):
+
+        # Si no es una coordenada vacia
+        if not math.isnan(point[0]):
+
+            # Get near points
+            _, nearPoint, d = kdtree.search_knn_vector_3d(point, num_punt*2)
+
             cant = 0
-            
-            for dist in distance:
-                #if this point is inside the range
+
+            for dist in d:
+                # if this point is inside the range
                 if dist < rango:
-                    cant = cant + 1    
-            
-            #To save out of range points
-            if cant > num_punt:   
-                nearPointIndex.append(pos)
-    
-    #This step is necesary to be able to use pc.extract
-    nearPointIndexArray = np.asarray(nearPointIndex)
+                    cant = cant + 1
 
-    newPc = pc.extract(nearPointIndexArray)
+            # To filter isolated points
+            if cant > num_punt:
+                newPoints.append(point)
+                newNormals.append(normalsArr[pos])
 
-    #To avoid distance elimiation problem (this step its not important, just to reduce data)
-    if (len(nearPointIndex) < 0.1* pc.size):
-        print ("Here is the Problem <<-------||<")
-        return pc
-    else:
-        return newPc
+    newPcd = ReduceNoiseUtils.getPcdFromPointsAndNormals(pointsArr, normalsArr)
+
+    return newPcd
+
 
 ###############################################################################
 # Eliminacion de ruido por normales
 ###############################################################################
-    
-def isInAngle(dir_1,dir_2,rangeOfDiff):
-    
-    cosineOfAngle = np.dot(dir_1,dir_2)
-    
-    #Because some of this values are close to 1 or -1
-    if(cosineOfAngle>1):
-        cosineOfAngle=1
-    elif (cosineOfAngle<-1):
-        cosineOfAngle=-1
+def isInAngle(dir_1, dir_2, rangeOfDiff):
+
+    cosineOfAngle = np.dot(dir_1, dir_2)
+
+    # Because some of this values are close to 1 or -1
+    if(cosineOfAngle > 1):
+        cosineOfAngle = 1
+    elif (cosineOfAngle < -1):
+        cosineOfAngle = -1
     #####
-    
+
     angle = math.acos(cosineOfAngle)
-    
+
     if angle < rangeOfDiff:
         return True
     else:
         return False
 
-def getNotSimilarNormals(normalDirection ,rangeOfDiff ,pos):
-    
+
+def getNotSimilarNormals(normalDirection, rangeOfDiff, pos):
+
     direction_1 = normalDirection[pos]
     direction_2 = normalDirection[pos+1]
 
@@ -98,152 +98,262 @@ def getNotSimilarNormals(normalDirection ,rangeOfDiff ,pos):
     #             |ö /
     # se salva    |-/  Se salva
     #     ________|/______________
-    #   
+    #
     #       ö = angle between dir_1 and dir2
     #
-    ########################################}
-    
-    if (not isInAngle(direction_1,direction_2,rangeOfDiff)):
+    ########################################
+
+    if (not isInAngle(direction_1, direction_2, rangeOfDiff)):
         return True
     else:
         return False
 
 
-def removeSimilarPointsUsingNormals(pc,normalDirection,normalIndex, rangeOfDiff):
-    
+def removeSimilarPointsUsingNormals(pcd, rangeOfDiff):
+
+    pointszArr = ReduceNoiseUtils.getArrFromPcd(pcd.points)
+    normalArr = ReduceNoiseUtils.getArrFromPcd(pcd.normals)
+
     takenPoints = []
-    
-    for pos in range(len(normalIndex)-1):
-        
-        #Si son normales distintas entonces se guarda
-        if getNotSimilarNormals(normalDirection, rangeOfDiff, pos):
-             takenPoints.append(normalIndex[pos])
-    
-    newPc = pc.extract(takenPoints)
+    takenNormals = []
 
-    return newPc
+    for pos, normal in enumerate(normalArr):
 
-def init(pc,kdtree,rangeOfDiff, verbose):
-    
-    #Obtener las normales  y sus indices
-    if (verbose): print ("ReduceNoiseUtils.directionOfNormals")
-    normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormals(pc,kdtree)
-    
-    #Se genera un nuevo Point cloud sin planos
-    if (verbose): print ("removeSimilarPointsUsingNormals")
-    pcWithoutFlatPart= removeSimilarPointsUsingNormals(
-            pc,
-            normalDirection,
-            normalIndex,
-            rangeOfDiff)
-    
-    if (verbose): print ("KdtreeStructure.getKdtreeFromPointCloud")
-    kdtreeWithoutFlatPart = KdtreeStructure.getKdtreeFromPointCloud(pcWithoutFlatPart)
-    
-    #Se limpia de los outliears
-    cleansedPc = reduceDistancePoint(pcWithoutFlatPart, kdtreeWithoutFlatPart,verbose)
-    
-    #Nuevo kdtree sin ruido
-    cleansedkdtree = KdtreeStructure.getKdtreeFromPointCloud(cleansedPc)
-    
-    return cleansedPc, cleansedkdtree
+        # Si son normales distintas entonces se guarda (se verifica que pos+1
+        # no sea mayor al tamaño del arreglo de normales)
+        if (len(normalArr) > pos+1) and getNotSimilarNormals(normalArr,
+                                                             rangeOfDiff, pos):
+            takenNormals.append(normal)
+            takenPoints.append(pointszArr[pos])
+
+    newPcd = ReduceNoiseUtils.getPcdFromPointsAndNormals(takenPoints,
+                                                         takenNormals)
+    return newPcd
+
+
+def init(pcd, kdtree, rangeOfDiff, verbose):
+
+    # Obtener las normales  y sus indices
+    if(verbose):
+        print("ReduceNoiseUtils.directionOfNormals")
+    # ReduceNoiseUtils.showPointCloud(pcd)
+    pcd = ReduceNoiseUtils.directionOfNormals(pcd, kdtree)
+
+    # Se genera un nuevo Point cloud sin planos
+    if (verbose):
+        print("removeSimilarPointsUsingNormals")
+
+    pcdWithoutFlatPart = removeSimilarPointsUsingNormals(pcd, rangeOfDiff)
+
+    if (verbose):
+        print("KdtreeStructure.getKdtreeFromPointCloud")
+    kdtreeWithoutFlatPart = KdtreeStructure.getKdtreeFromPointCloud(
+        pcdWithoutFlatPart)
+
+    # Se limpia de los outliears
+    cleansedPcd = reduceDistancePoint(pcdWithoutFlatPart,
+                                      kdtreeWithoutFlatPart, verbose)
+    # ReduceNoiseUtils.showPointCloud(cleansedPcd)
+    print("Tamaño reducido a un: %2.2f" %(100*len(np.asarray(cleansedPcd.points))/len(np.asarray(pcd.points))))
+    # Nuevo kdtree sin ruido
+    cleansedkdtree = KdtreeStructure.getKdtreeFromPointCloud(cleansedPcd)
+
+    return cleansedPcd, cleansedkdtree
+
 
 ###############################################################################
-#Aquí va las direcciones de lectura y escritura
-    
+# Aquí va las direcciones de lectura y escritura
 def ruido(rangeOfDiff, pos, verbose):
 
-    readDir = './../datos/inicial/inicial_%d.pcd'% pos
-    writeDir = './../datos/sin_ruido/sin_ruido_%d.pcd'% pos
-    
-    #Lectura
-    if (verbose): print ("READ - ruido")
-    pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
-    print('Tamaño inicial: ',pc.size)
-    
-    #Proceso
-    if (verbose): print ("PROCESS - ruido")
-    cleansedPc, cleansedKdtree = init(pc,kdtree,rangeOfDiff,verbose)
-    
-    #Escritura
-    if (verbose): print ("WRITE - ruido")
-    cleansedPc.to_file(str.encode(writeDir))
-    
-    return cleansedPc, cleansedKdtree
-###############################################################################
-    
+    readDir = './../datos/inicial/inicial_%d.pcd' % pos
+    writeDir = './../datos/sin_ruido/sin_ruido_%d.pcd' % pos
+    # Lectura
+    if(verbose):
+        print("READ - ruido")
+
+    pcd, kdtree, size = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
+    print('Tamaño inicial: ', size)
+    # ReduceNoiseUtils.showPointCloud(pcd)
+    # Proceso
+    if (verbose):
+        print("PROCESS - ruido")
+    cleansedPcd, cleansedKdtree = init(pcd, kdtree, rangeOfDiff, verbose)
+
+    # Escritura
+    if (verbose):
+        print("WRITE - ruido")
+    # ReduceNoiseUtils.showPointCloud(cleansedPcd)
+    # TODO verify if it save correctly
+    ReduceNoiseUtils.saveFile(writeDir, cleansedPcd)
+
+    return cleansedPcd, cleansedKdtree
+
+
+##############################################################################
 def medition(rangeOfDiff, pos, tipo, precision, verbose):
-    
-    readDir = './../datos/inicial/inicial_%d.pcd'% pos
-    #writeDir = './sin_ruido_%d.pcd'% pos
-    
+
+    readDir = './../datos/inicial/inicial_%d.pcd' % pos
+    #writeDir = './sin_ruido_%d.pcd' % pos
+
     #Lectura
     if (verbose): print ("READ")
-    pc,kdtree = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
-    
+    pcd, kdtree, size = KdtreeStructure.getKdtreeFromPointCloudDir(readDir)
+
     if(tipo == "ruido-rangeOfDiff"):
-        initRSDifftMedition(pc,kdtree,pos, verbose)
-    
+        initRSDifftMedition(pcd, kdtree, verbose)
+        #initRSDiffCantMedition(pc, kdtree, verbose)
+
     if(tipo == "ruido-rangeOfSamples"):
-        initRSSamplesMedition(pc,kdtree,rangeOfDiff, verbose)
-    
+        initRSSamplesMedition(pcd, kdtree, rangeOfDiff, verbose)
+
     if(tipo == "ruido-normalPrecision"):
-        initNormalPrecision(pc,kdtree,rangeOfDiff,precision,verbose)
+        initNormalPrecision(pcd, kdtree, rangeOfDiff, precision, verbose)
+
+    if(tipo == "plot-reduction-rangeDiffVsPointsAcum"):
+        initPlotReductionRdVsPa(pcd, kdtree, verbose)
     #Escritura
     #if (verbose): print ("WRITE")
     #cleansedPc.to_file(str.encode(writeDir))
-    
+
     #return cleansedPc, cleansedKdtree
 
-def initRSDifftMedition(pc,kdtree,pos, verbose):
 
-    print("Total size: ", pc.size)
-    normalDirection, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree,5)
-    #normalDirection, normalIndex = ReduceNoiseUtils.directionOfNormalsMedition(pc,kdtree,50)
-    
-    print(normalDirection)
-    
+def initPlotReductionRdVsPa(pcd, kdtree, verbose):
+
+    size = len(np.asarray(pcd.points))
+    print("Total size: ", size)
+
+    rangeArr_x = np.linspace(0.001, 0.1, 100)
+    points_y = np.linspace(10, 150, 15)
+
+    results = np.zeros((len(rangeArr_x), len(points_y)))
+
+    for pos_y, point in enumerate(points_y):
+
+        pcdReduced = ReduceNoiseUtils.directionOfNormalsMedition(pcd, kdtree,
+                                                                 int(point))
+        for pos_x, diff in enumerate(rangeArr_x):
+            pcdReduced = removeSimilarPointsUsingNormals(pcd, diff)
+            results[pos_x][pos_y] = (1 - (len(np.asarray(pcdReduced.points))
+                                          / size))*100
+            print("[%3d][%3.3f] ==> %3.2f" % (point, diff, results[pos_x][pos_y]))
+
+    X, Y = np.meshgrid(points_y, rangeArr_x)
+
+    plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.plot_surface(X, Y, results, rstride=1, cstride=1,
+                    cmap='viridis', edgecolor='none')
+    ax.set_xlabel('número de puntos')
+    ax.set_ylabel('rango de diferencia')
+
+    ax.set_zlabel('Porcentaje reducido')
+    ax.set_title('Porcentaje de reducción de ruido')
+
+    fig2, ax2 = plt.subplots(1, 1)
+    contourf_ = ax2.contourf(X, Y, results, cmap='viridis')
+
+    ax2.set_title('Porcentaje de reducción de ruido')
+    ax2.set_xlabel('número de puntos')
+    ax2.set_ylabel('rango de diferencia')
+    fig2.colorbar(contourf_)
+    plt.show()
+
+
+def initRSDifftMedition(pcd, kdtree, verbose):
+
+    size = len(np.asarray(pcd.points))
+    print("Total size: ", size)
+    #normalDirection, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree,5)
+    pcd = ReduceNoiseUtils.directionOfNormalsMedition(pcd, kdtree, 120)
+
+    size = len(np.asarray(pcd.points))
+    print(pcd.normals)
+    ReduceNoiseUtils.showNormals(pcd)
     #rangeStart = 0.00000000149
-    rangeStart = 0.000000014889
-    rangeLong  = 0.000000000001
-    rangeNumber = 1500
+
+    rangeLong = 0.005
+    rangeNumber = 100
     rangeList = []
-    
-    print (rangeStart)
-    print ("")
-    for segmentPos in range (rangeNumber):
-        rangeList.append(rangeStart + rangeLong * segmentPos)
+
+    print("")
+    for segmentPos in range(rangeNumber):
+        rangeList.append(rangeLong * (segmentPos+1))
     '''
     rangeStart = 1
     rangenumber = 100
     rangeLong = 100000
     rangeList = []
-    
+
     for segmentPos in range (rangenumber):
         rangeList.append(rangeStart / rangeLong*segmentPos)
-     
+
     '''
+
+    percent = []
+
     contadorRango = 0
     for rangeOfDiff in rangeList:
+
+        pcdReduced = removeSimilarPointsUsingNormals(pcd, rangeOfDiff)
+        print(contadorRango)
+        #print(len(np.asarray(pcdReduced.points)), " while ->   ", size, rangeOfDiff)
+        #print(contadorRango, '=> ', "%3.2f" % (len(np.asarray(pcdReduced.points)) *
+        #                             100 / size))
+        percent.append((1 - len(np.asarray(pcdReduced.points)) / size) * 100)
+        contadorRango += 1
+
+    data = {'rango': rangeList,
+            'porcentaje reducido': percent}
+
+    df = pd.DataFrame(data, columns=['porcentaje reducido', 'rango'])
+    df.plot(x='porcentaje reducido', y='rango', kind='line')
+    plt.show()
+
+
+def initRSDiffCantMedition(pcd, kdtree, verbose):
+
+    size = len(np.asarray(pcd.points))
+
+    print("Total size: ", size)
+    #normalDirection, normalIndex = ReduceNoiseUtils.directionOfMoreRelatedNormalsMedition(pc,kdtree,5)
+
+    ReduceNoiseUtils.showNormals(pcd)
+    #rangeStart = 0.00000000149
+    diff = 0.1
+
+    percent = []
+    numbers = []
+
+    for cant in range(5,200):
+
+        pcd = ReduceNoiseUtils.directionOfNormalsMedition(pcd, kdtree, cant)
         
-        pcWithoutFlatPart = removeSimilarPointsUsingNormals(
-                pc,
-                normalDirection,
-                normalIndex,
-                rangeOfDiff)
-        
-        print (contadorRango,'=> ',(pcWithoutFlatPart.size*100/pc.size))
-        contadorRango +=1
-    
-def initRSSamplesMedition(pc,kdtree,rangeOfDiff, verbose):
-    
+        pcdReduced = removeSimilarPointsUsingNormals(pcd, diff)
+        print(cant)
+        #print(len(np.asarray(pcdReduced.points)), " while ->   ", size, rangeOfDiff)
+        #print(contadorRango, '=> ', "%3.2f" % (len(np.asarray(pcdReduced.points)) *
+        #                             100 / size))
+        percent.append((1 - len(np.asarray(pcdReduced.points)) / size) * 100)
+        numbers.append(cant)
+
+    data = {'rango': numbers,
+            'porcentaje reducido': percent}
+
+    df = pd.DataFrame(data, columns=['porcentaje reducido', 'rango'])
+    df.plot(x='porcentaje reducido', y='rango', kind='line')
+    plt.show()
+
+
+def initRSSamplesMedition(pc, kdtree, rangeOfDiff, verbose):
 
     print ('Total',',',pc.size)
     print ('MAX',',','Tiempo normal simple',',','Tiempo remove normal simple',',','Número de puntos simple',',','Tiempo normal complex',',','Tiempo remove normal complex',',','Número de puntos complex')
     for cant in range(10):
-        
-        if(cant== 0 or cant == 1 or cant == 2): continue
-        
+
+        if(cant == 0 or cant == 1 or cant == 2):
+            continue
+
         #Obtener las normales  y sus indices
         if (verbose): print ("ReduceNoiseUtils.directionOfNormalsMedition")
         start_time = time.time()
@@ -298,7 +408,7 @@ def initNormalPrecision(pc,kdtree,rangeOfDiff,precision,verbose):
     for pointTimes in range(number - 2): # -2 to avoid overflow pc size
         
         pointTaked = pointRange * (pointTimes+1) # +1 to avoid take cero value
-        
+
         pointArr.append(pointTaked)
     
     pc_2 = pc.extract(pointArr)

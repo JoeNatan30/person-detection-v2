@@ -1,45 +1,160 @@
 from sklearn.model_selection import cross_val_score
-import numpy as np
+from bayes_opt import BayesianOptimization
+from bayes_opt.logger import JSONLogger
+from bayes_opt.event import Events
+from bayes_opt.util import load_logs
 from sklearn.ensemble import RandomForestClassifier as RFC
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier as MLPC
 from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
-from bayes_opt import BayesianOptimization
-from bayes_opt.util import Colours
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, precision_score, recall_score,  average_precision_score
-from sklearn import config_context
 
-def nn_cv(hidden_layer_sizes_1, hidden_layer_sizes_2, alpha, beta_1, beta_2, data, targets):
-    """Neural network validation
-    """
-    #Estimador de las Redes Neuronales
-    estimator = OneVsOneClassifier(MLPC(solver='adam',
-                     alpha = alpha,
-                     beta_1 = beta_1,
-                     beta_2 = beta_2,
-                     hidden_layer_sizes = (hidden_layer_sizes_1 ,hidden_layer_sizes_2),
-                     max_iter = 900, random_state=42), n_jobs=-1)
+
+# #############################################################################
+# NEURAL NETWORK
+
+def nn_cv(hidden_layer_sizes_1, hidden_layer_sizes_2, alpha, beta_1, beta_2,
+          data, targets):
+
+    # Estimador de las Redes Neuronales
+    estimator = OneVsRestClassifier(MLPC(solver='adam',
+                                        alpha=alpha,
+                                        beta_1=beta_1,
+                                        beta_2=beta_2,
+                                        hidden_layer_sizes=(
+                                            hidden_layer_sizes_1,
+                                            hidden_layer_sizes_2),
+                                        max_iter=900,
+                                        random_state=42),
+                                   n_jobs=-1)
 
     skf = StratifiedKFold(n_splits=4)
 
-    def getScores(estimator, x, y):
-        yPred = estimator.predict(x)
-        labels = np.unique(yPred)
+    # Cross validation
+    cval = cross_val_score(estimator, data, targets, n_jobs=-1,
+                           scoring='f1_macro', cv=skf)
 
-        return (accuracy_score(y,yPred),
-                precision_score(y, yPred, average='macro', labels=labels),
-                recall_score(y, yPred, average='macro', labels=labels))
-
-    def my_scorer(estimator, x,y):
-       a, p, r = getScores(estimator, x, y)
-       return (a+p+r)/3
-
-    #Cross validation
-    cval = cross_val_score(estimator, data, targets,n_jobs=-1,
-                           scoring = my_scorer, cv=skf)
-    
     return cval.mean()
+
+
+def optimize_nn(data, targets):
+
+    def nn_crossval(hidden_layer_sizes_1, hidden_layer_sizes_2,
+                    alpha, beta_1, beta_2):
+
+        alpha = 1/(pow(10,alpha))
+        beta_1 = beta_1 / 10
+        beta_2 = beta_2 / 100
+
+        return nn_cv(int(hidden_layer_sizes_1),
+                     int(hidden_layer_sizes_2),
+                     alpha=alpha,
+                     beta_1=beta_1,
+                     beta_2=0.1,
+                     data=data, targets=targets)
+
+    optimizer = BayesianOptimization(
+            f=nn_crossval,
+            pbounds={
+             "hidden_layer_sizes_1": (20, 1000),
+             "hidden_layer_sizes_2": (20, 1000),
+             "alpha": (1, 4),
+             "beta_1": (1, 9),
+             "beta_2": (10, 99)},
+            random_state=41,
+            verbose=2
+    )
+
+    load_logs(optimizer, logs=["./../datos/results/nn_f1_macro.json"])
+
+    logger = JSONLogger(path="./../datos/results/nn_f1_macro_log.json")
+
+    optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
+
+    optimizer.maximize(n_iter=20, init_points=10)
+
+    print("Final result:", optimizer.max)
+
+
+# #############################################################################
+# RANDOM FOREST
+
+def rfc_cv(n_estimators, min_samples_split, data, targets):
+    """Random Forest cross validation.
+    This function will instantiate a random forest classifier with parameters
+    n_estimators, min_samples_split, and max_features. Combined with data and
+    targets this will in turn be used to perform cross validation. The result
+    of cross validation is returned.
+    Our goal is to find combinations of n_estimators, min_samples_split, and
+    max_features that minimzes the log loss.
+    """
+
+    # Estimador del Random Forest
+    estimator = OneVsRestClassifier(RFC(
+        n_estimators=n_estimators,
+        min_samples_split=min_samples_split,
+        n_jobs=-1,
+        random_state=42), n_jobs=-1)
+
+    skf = StratifiedKFold(n_splits=4)
+
+    # Cross validation not neg_log_loss
+    cval = cross_val_score(estimator, data, targets,
+                           scoring='f1_macro', cv=skf, n_jobs=-1)
+    return cval.mean()
+
+
+def optimize_rfc(data, targets):
+    """Apply Bayesian Optimization to Random Forest parameters."""
+
+    def rfc_crossval(n_estimators, min_samples_split):
+        """Wrapper of RandomForest cross validation.
+        Notice how we ensure n_estimators and min_samples_split are casted
+        to integer before we pass them along. Moreover, to avoid max_features
+        taking values outside the (0, 1) range, we also ensure it is capped
+        accordingly.
+        """
+
+
+
+        return rfc_cv(
+            n_estimators=int(n_estimators),
+            min_samples_split=int(min_samples_split),
+
+            data=data,
+            targets=targets,
+        )
+
+    optimizer = BayesianOptimization(
+        f=rfc_crossval,
+        pbounds={
+            "n_estimators": (600, 800),
+            "min_samples_split": (2, 150),
+
+        },
+        random_state=41,
+        verbose=2
+    )
+
+    optimizer.probe(
+        params={"n_estimators": 750,
+                "min_samples_split": 2},
+        lazy=True,
+        )
+
+    # load_logs(optimizer, logs=["./../datos/results/rf_ovr_f1_final.json"])
+
+    logger = JSONLogger(path="./../datos/results/rf_ovr_f1_final_log.json")
+
+    optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
+
+    optimizer.maximize(n_iter=0, init_points=0)
+
+    print("Final result:", optimizer.max)
+
+
+# #############################################################################
+# SUPPORT VECTOR MACHINE
 
 def svc_cv(C, gamma, data, targets):
     """SVC cross validation.
@@ -49,88 +164,17 @@ def svc_cv(C, gamma, data, targets):
     Our goal is to find combinations of C and gamma that maximizes the roc_auc
     metric.
     """
-    #Estimador del SVM
-    estimator = SVC(kernel='rbf', C=C, gamma=gamma,
-                    random_state=42)
+    # Estimador del SVM
+    estimator = OneVsRestClassifier(SVC(kernel='rbf', C=C,
+                                        gamma=gamma, probability=False),
+                                    n_jobs=-1)
 
     skf = StratifiedKFold(n_splits=4)
 
-    def getScores(estimator, x, y):
-        yPred = estimator.predict(x)
-        labels = np.unique(yPred)
-        return (accuracy_score(y, yPred),
-            precision_score(y, yPred, average = 'macro', labels=labels),
-            recall_score(y, yPred, average ='macro',labels=labels))
-
-    def my_scorer(estimator, x, y):
-        a, p, r = getScores(estimator, x, y)
-        return (a+p+r)/3
-
-    #Cross validation
-    cval = cross_val_score(estimator, data, targets, n_jobs=-1, scoring=my_scorer, cv=skf)
+    # Cross validation
+    cval = cross_val_score(estimator=estimator, X=data, y=targets, n_jobs=-1,
+                           scoring='f1_macro', cv=skf)
     return cval.mean()
-
-
-def rfc_cv(n_estimators, min_samples_split,max_features, data, targets):
-    """Random Forest cross validation.
-    This function will instantiate a random forest classifier with parameters
-    n_estimators, min_samples_split, and max_features. Combined with data and
-    targets this will in turn be used to perform cross validation. The result
-    of cross validation is returned.
-    Our goal is to find combinations of n_estimators, min_samples_split, and
-    max_features that minimzes the log loss.
-    """
-    
-    #Estimador del Random Forest
-    estimator = OneVsRestClassifier(RFC(
-        n_estimators=n_estimators,
-        min_samples_split=min_samples_split,
-        max_features = max_features,
-        n_jobs = -1,
-        random_state=42),n_jobs=-1)
-
-    def getScores(estimator, x, y):
-        yPred = estimator.predict(x)
-        labels = np.unique(yPred)
-        return (accuracy_score(y, yPred),
-                precision_score(y, yPred, average='macro', labels= labels),
-                recall_score(y, yPred, average='macro', labels= labels))
-
-    def my_scorer(estimator, x, y):
-        a, p, r = getScores(estimator, x, y)
-        return (a+p+r)/3
-
-    skf = StratifiedKFold(n_splits=4)
-
-    #Cross validation
-    cval = cross_val_score(estimator, data, targets, scoring=my_scorer, cv=skf,n_jobs=-1)
-    return cval.mean()
-
-def optimize_nn(data,targets):
-
-
-    def nn_crossval(hidden_layer_sizes_1, hidden_layer_sizes_2, alpha, beta_1, beta_2):
-        return nn_cv(int(hidden_layer_sizes_1),
-                     int(hidden_layer_sizes_2),
-                     alpha = alpha,
-                     beta_1 = 0.1,
-                     beta_2 = 0.1,
-                     data=data, targets=targets)
-
-    optimizer = BayesianOptimization(
-            f=nn_crossval,
-            pbounds={
-             "hidden_layer_sizes_1": (20,1000),
-             "hidden_layer_sizes_2":(20,1000),
-             "alpha":(0.00001,0.1),
-             "beta_1":(0.1,0.9),
-             "beta_2":(0.1,0.9)},
-            random_state=42,
-            verbose=2
-    )
-    optimizer.maximize(n_iter=10)
-
-    print("Final result:", optimizer.max)
 
 
 def optimize_svc(data, targets):
@@ -151,50 +195,13 @@ def optimize_svc(data, targets):
         random_state=42,
         verbose=2
     )
-    optimizer.maximize(n_iter=10)
+
+    load_logs(optimizer, logs=["./../datos/results/svc_f1_macro.json"])
+
+    logger = JSONLogger(path="./../datos/results/svc_f1_macro_log.json")
+
+    optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
+
+    optimizer.maximize(n_iter=10, init_points=10)
 
     print("Final result:", optimizer.max)
-
-
-def optimize_rfc(data, targets):
-    """Apply Bayesian Optimization to Random Forest parameters."""
-    def rfc_crossval(n_estimators, min_samples_split,max_features):
-        """Wrapper of RandomForest cross validation.
-        Notice how we ensure n_estimators and min_samples_split are casted
-        to integer before we pass them along. Moreover, to avoid max_features
-        taking values outside the (0, 1) range, we also ensure it is capped
-        accordingly.
-        """
-
-        return rfc_cv(
-            n_estimators=int(n_estimators),
-            min_samples_split=int(min_samples_split),
-            max_features = max_features,
-            data=data,
-            targets=targets,
-        )
-
-    optimizer = BayesianOptimization(
-        f=rfc_crossval,
-        pbounds={
-            "n_estimators": (200, 1000),
-            "min_samples_split": (2, 200),
-            "max_features":(0.0000001,1)
-        },
-        random_state=42,
-        verbose=2
-    )
-    optimizer.maximize(n_iter=10)
-
-    print("Final result:", optimizer.max)
-'''
-if __name__ == "__main__":
-
-    data, targets = #TODO colocar dataset_x y dataset_y
-
-    print(Colours.yellow("--- Optimizing SVM ---"))
-    optimize_svc(data, targets)
-
-    print(Colours.green("--- Optimizing Random Forest ---"))
-    optimize_rfc(data, targets)
-'''
