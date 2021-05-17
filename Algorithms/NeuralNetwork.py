@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import roc_curve
 from sklearn.metrics import plot_confusion_matrix
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import precision_recall_curve, average_precision_score
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import auc
@@ -31,15 +31,12 @@ def inicio_ejemplo(var):
 def entrenar(X, y):
     
     clf = OneVsRestClassifier(MLPClassifier(solver='adam',
-                                           alpha=0.002342,
-                                           beta_1=0.9, beta_2=0.999,
                                            verbose=1,
-                                           hidden_layer_sizes = (20,663),
-                                           max_iter=900),
+                                           hidden_layer_sizes = (490,512)),
                              n_jobs = -1)
     modelo = clf.fit(X, y)
     
-    modelo_filename = 'nn_ovr_f1.pkl'
+    modelo_filename = './Results/nn_final.pkl'
     #decision_tree_model_pkl = open(modelo_filename, 'wb')
     joblib.dump(modelo, modelo_filename)
     # Close the pickle instances
@@ -48,7 +45,7 @@ def entrenar(X, y):
     
 def predecir(X_test, y_test):
 
-    modelo_filename = 'nn_ovo_f1.pkl'
+    modelo_filename = './Results/nn_final.pkl'
     #modelo = open(modelo_filename, 'rb')
     mpl = joblib.load(modelo_filename)
     
@@ -72,9 +69,13 @@ def predecir(X_test, y_test):
     tpr = dict()
     roc_auc = dict()
 
+    plt.figure(figsize=(8,5.5))
     # precision recall curve
     precision = dict()
     recall = dict()
+    plt.figure(figsize=(8,5.5))
+    average_precision = dict()
+    
 
     for i in range(n_classes):
         # ROC curve
@@ -84,31 +85,54 @@ def predecir(X_test, y_test):
         # Precition recall
         precision[i], recall[i], _ = precision_recall_curve(y_test[:, i],
                                                             y_score[:, i])
+        average_precision[i] = average_precision_score(y_test[:, i], y_score[:, i])
 
-        plt.plot(recall[i], precision[i], lw=2, label=class_names[i])
+        plt.plot(recall[i], precision[i], lw=2, label='Curva presición-recuerdo de la clase {0} (área = {1:0.2f})'
+                                       ''.format(class_names[i], average_precision[i]))
 
     plt.xlabel("Recuerdo")
     plt.ylabel("precisión")
     plt.legend(loc="best")
-    plt.title("Curva de precisión vs recuerdo")
+    plt.title("Redes neuronales\nCurva de precisión vs recuerdo")
     plt.show()
 
+    plt.figure(figsize=(8,5.5))
     plot_confusion_matrix(mpl, X_test, y_true,
                           cmap=plt.cm.Blues,
                           display_labels=class_names)
-
+    plt.title("Redes neuronales\nMatriz de confusión")
+    plt.ylabel("Categoría verdadera")
+    plt.xlabel("Categoría predecida")
     plt.show()
-    # Plot of a ROC curve for a specific class
-    for i in range(n_classes):
-        plt.figure()
-        plt.plot(fpr[i], tpr[i], label='Área bajo la curva: %0.2f)' %
-                 roc_auc[i])
 
-        plt.plot([0, 1], [0, 1], 'k--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Curva ROC: %s' % class_names[i])
-        plt.legend(loc="lower right")
-        plt.show()
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(n_classes):
+        mean_tpr += np.interp(all_fpr, fpr[i], tpr[i])
+    # Finally average it and compute AUC
+    mean_tpr /= n_classes
+    plt.figure(figsize=(8,5.5))
+
+    for i in range(n_classes):
+        plt.plot(fpr[i], tpr[i], label='Curva ROC de la clase {0} (área = {1:0.2f})'
+                                       ''.format(class_names[i], roc_auc[i]))
+
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Ratio de falsos positivos')
+    plt.ylabel('Ratio de verdaderos positivos')
+    plt.title('Redes neuronales\nCurva ROC')
+    plt.legend(loc="best")
+    plt.show()
+    

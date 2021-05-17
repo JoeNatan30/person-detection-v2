@@ -15,7 +15,7 @@ def main(proceso, tipo):
     porcentaje = 80        # porcent aje para el training
     # tamano_conjunto = 300   # tamano del conjunto de puntos a tomar
     tamano_conjunto = 800   # tamano del conjunto de puntos a tomar
-    algoritmo = "rf"       # "svm" "rf" "rn"
+    algoritmo = "svm"       # "svm" "rf" "rn"
     version = 1             # version del kinect
     max_proces_paral = 1  # Maximo de procesos paralelos (se cuenta desde cero)
     pos_proces_paral = 0  # posicion de procesos paralelos (debe inicar en cero)
@@ -97,4 +97,4 @@ def main(proceso, tipo):
 """
 
 #main("medicion","ruido-normalPrecision")
-main("validacion_cruzada", "ransac-rangeDiff")
+main("prueba", "ransac-rangeDiff")

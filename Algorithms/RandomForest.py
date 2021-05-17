@@ -13,6 +13,7 @@ from sklearn.metrics import precision_recall_curve, average_precision_score
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import auc
 from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib import style
@@ -40,14 +41,11 @@ def inicio_ejemplo(var):
 
 
 def entrenar(X, y):
-    
-    max_features = 1/(pow(10,0.5573003895001497))
 
     # F1
     rf = RandomForestClassifier(
-                             n_estimators=int(583.3696128501642),
-                             min_samples_split=int(4.041961432004625),
-                             max_features=max_features,
+                             n_estimators=int(659.1651),
+                             min_samples_split=int(2.0),
                              verbose=1,
                              n_jobs=-1)
     '''
@@ -61,7 +59,7 @@ def entrenar(X, y):
     '''
     modelo = rf.fit(X, y)
 
-    modelo_filename = './Results/randomForest/f1/rf_ovr_f1_2.pkl'
+    modelo_filename = './Results/rf_final.pkl'
 
     joblib.dump(modelo, modelo_filename)
     # Close the pickle instances
@@ -69,14 +67,14 @@ def entrenar(X, y):
 
 def predecir(X_test, y_test):
 
-    modelo_filename = './Results/randomForest/f1/rf_ovr_f1_2.pkl'
+    modelo_filename = './Results/rf_final.pkl'
 
     rf_model = joblib.load(modelo_filename)
 
     y_pred = rf_model.predict(X_test)
 
     y_score = rf_model.predict_proba(X_test)
-
+                
     y_true = y_test
 
     pd.set_option('display.max_rows', 500)
@@ -93,9 +91,13 @@ def predecir(X_test, y_test):
     tpr = dict()
     roc_auc = dict()
 
+    plt.figure(figsize=(8,5.5))
     # precision recall curve
     precision = dict()
     recall = dict()
+    plt.figure(figsize=(8,5.5))
+    average_precision = dict()
+    
 
     for i in range(n_classes):
         # ROC curve
@@ -105,33 +107,54 @@ def predecir(X_test, y_test):
         # Precition recall
         precision[i], recall[i], _ = precision_recall_curve(y_test[:, i],
                                                             y_score[:, i])
+        average_precision[i] = average_precision_score(y_test[:, i], y_score[:, i])
 
-        plt.plot(recall[i], precision[i], lw=2, label=class_names[i])
+        plt.plot(recall[i], precision[i], lw=2, label='Curva presición-recuerdo de la clase {0} (área = {1:0.2f})'
+                                       ''.format(class_names[i], average_precision[i]))
 
     plt.xlabel("Recuerdo")
     plt.ylabel("precisión")
     plt.legend(loc="best")
-    plt.title("Curva de precisión vs recuerdo")
+    plt.title("Bosques Aleatorios\nCurva de precisión vs recuerdo")
     plt.show()
 
+    plt.figure(figsize=(8,5.5))
     plot_confusion_matrix(rf_model, X_test, y_true,
                           cmap=plt.cm.Blues,
                           display_labels=class_names)
-
+    plt.title("Bosques aleatorios\nMatriz de confusión")
+    plt.ylabel("Categoría verdadera")
+    plt.xlabel("Categoría predecida")
     plt.show()
-    # Plot of a ROC curve for a specific class
+
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+
     for i in range(n_classes):
-        plt.figure()
-        plt.plot(fpr[i], tpr[i], label='Área bajo la curva: %0.2f)' %
-                 roc_auc[i])
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
 
-        plt.plot([0, 1], [0, 1], 'k--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Curva ROC: %s' % class_names[i])
-        plt.legend(loc="lower right")
-        plt.show()
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(n_classes):
+        mean_tpr += np.interp(all_fpr, fpr[i], tpr[i])
+    # Finally average it and compute AUC
+    mean_tpr /= n_classes
+    plt.figure(figsize=(8,5.5))
 
-    print(average_precision_score(y_test, y_pred, average='macro'))
+    for i in range(n_classes):
+        plt.plot(fpr[i], tpr[i], label='Curva ROC de la clase {0} (área = {1:0.2f})'
+                                       ''.format(class_names[i], roc_auc[i]))
+
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Ratio de falsos positivos')
+    plt.ylabel('Ratio de verdaderos positivos')
+    plt.title('Bosques Aleatorios\nCurva ROC')
+    plt.legend(loc="best")
+    plt.show()
+    #print(average_precision_score(y_test, y_pred, average='macro'))

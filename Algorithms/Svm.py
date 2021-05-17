@@ -20,7 +20,8 @@ import pandas as pd
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve
 from sklearn.metrics import plot_confusion_matrix
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.metrics import precision_recall_curve, average_precision_score
 from sklearn.metrics import auc
 #from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
 #from sklearn.metrics import plot_confusion_matrix
@@ -68,22 +69,21 @@ def inicio_ejemplo(var):
 
 def entrenar(X, y): #dataset_train, resultados, dataset_realdataset_real
 
-    expC = -1.4376340487359496
-    expGamma = -9.824378328006366
+    expC = 30
+    expGamma = 2
         
-    svm_rbf = OneVsRestClassifier(svm.SVC(kernel='rbf', verbose=1, probability=False,
+    svm_rbf = OneVsRestClassifier(svm.SVC(kernel='rbf', verbose=1, probability=True,
                                           C=2**expC, gamma=2**expGamma),
                                   n_jobs=-1)
-    svm_rbf.probability = False
 
     modelo = svm_rbf.fit(X, y)
 
-    modelo_filename = 'svm_bin_esPartePersona.pkl'
+    modelo_filename = './Results/svm_final_overfit.pkl'
     joblib.dump(modelo, modelo_filename)
 
 def predecir(X_test, y_test):
-
-    modelo_filename = 'svm_bin_esPartePersona.pkl'
+    modelo_filename = './Results/svm_final_overfit.pkl'
+    # modelo_filename = './Results/svm_final_overfit.pkl'
     svm_rbf = joblib.load(modelo_filename)
 
     y_pred = svm_rbf.predict(X_test)
@@ -106,9 +106,13 @@ def predecir(X_test, y_test):
     tpr = dict()
     roc_auc = dict()
 
+    plt.figure(figsize=(8,5.5))
     # precision recall curve
     precision = dict()
     recall = dict()
+    plt.figure(figsize=(8,5.5))
+    average_precision = dict()
+    
 
     for i in range(n_classes):
         # ROC curve
@@ -118,60 +122,54 @@ def predecir(X_test, y_test):
         # Precition recall
         precision[i], recall[i], _ = precision_recall_curve(y_test[:, i],
                                                             y_score[:, i])
+        average_precision[i] = average_precision_score(y_test[:, i], y_score[:, i])
 
-        plt.plot(recall[i], precision[i], lw=2, label=class_names[i])
+        plt.plot(recall[i], precision[i], lw=2, label='Curva presición-recuerdo de la clase {0} (área = {1:0.2f})'
+                                       ''.format(class_names[i], average_precision[i]))
 
     plt.xlabel("Recuerdo")
     plt.ylabel("precisión")
     plt.legend(loc="best")
-    plt.title("Curva de precisión vs recuerdo")
+    plt.title("SVM\nCurva de precisión vs recuerdo")
     plt.show()
 
+    plt.figure(figsize=(8,5.5))
     plot_confusion_matrix(svm_rbf, X_test, y_true,
                           cmap=plt.cm.Blues,
                           display_labels=class_names)
-
+    plt.title("SVM\nMatriz de confusión")
+    plt.ylabel("Categoría verdadera")
+    plt.xlabel("Categoría predecida")
     plt.show()
-    # Plot of a ROC curve for a specific class
+
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+
     for i in range(n_classes):
-        plt.figure()
-        plt.plot(fpr[i], tpr[i], label='Área bajo la curva: %0.2f)' %
-                 roc_auc[i])
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
 
-        plt.plot([0, 1], [0, 1], 'k--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Curva ROC: %s' % class_names[i])
-        plt.legend(loc="lower right")
-        plt.show()
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(n_classes)]))
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(n_classes):
+        mean_tpr += np.interp(all_fpr, fpr[i], tpr[i])
+    # Finally average it and compute AUC
+    mean_tpr /= n_classes
+    plt.figure(figsize=(8,5.5))
 
-    '''
-    y_score = svm_rbf.predict_proba(X_test)
-    y_true = y_test
+    for i in range(n_classes):
+        plt.plot(fpr[i], tpr[i], label='Curva ROC de la clase {0} (área = {1:0.2f})'
+                                       ''.format(class_names[i], roc_auc[i]))
 
-    pd.set_option('display.max_rows', 500)
-    pd.set_option('display.max_columns', 500)
-    pd.set_option('display.width', 1000)
-
-    np.set_printoptions(threshold=np.inf)
-    '''
-    #cm = ConfusionMatrix(y_test, y_pred)
-    #cm.stats()
-    #cm.print_stats()
-    '''
-    plot.precision_recall(y_true, y_score)
-    plot.roc(y_true, y_score)
-    plot.confusion_matrix(y_true, y_pred)
-
-
-    fpr, tpr, _ = roc_curve(y_test,  y_score) 
-    auc = roc_auc_score(y_test, y_score)   
-    plt.plot(fpr,tpr,label="data 1, auc="+str(auc))   
-    plt.legend(loc=4)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Ratio de falsos positivos')
+    plt.ylabel('Ratio de verdaderos positivos')
+    plt.title('SVM\nCurva ROC')
+    plt.legend(loc="best")
     plt.show()
-    '''
-    print ("predecir")
-
-#inicio_ejemplo(2)
+    

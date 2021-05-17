@@ -6,27 +6,23 @@ from bayes_opt.util import load_logs
 from sklearn.ensemble import RandomForestClassifier as RFC
 from sklearn.svm import SVC
 from sklearn.neural_network import MLPClassifier as MLPC
-from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.model_selection import StratifiedKFold
 
 
 # #############################################################################
 # NEURAL NETWORK
 
-def nn_cv(hidden_layer_sizes_1, hidden_layer_sizes_2, alpha, beta_1, beta_2,
+def nn_cv(hidden_layer_sizes_1, hidden_layer_sizes_2,
           data, targets):
 
     # Estimador de las Redes Neuronales
     estimator = OneVsRestClassifier(MLPC(solver='adam',
-                                        alpha=alpha,
-                                        beta_1=beta_1,
-                                        beta_2=beta_2,
-                                        hidden_layer_sizes=(
-                                            hidden_layer_sizes_1,
-                                            hidden_layer_sizes_2),
-                                        max_iter=900,
-                                        random_state=42),
-                                   n_jobs=-1)
+                                         hidden_layer_sizes=(
+                                             hidden_layer_sizes_1,
+                                             hidden_layer_sizes_2),
+                                         random_state=41),
+                                    n_jobs=-1)
 
     skf = StratifiedKFold(n_splits=4)
 
@@ -39,39 +35,34 @@ def nn_cv(hidden_layer_sizes_1, hidden_layer_sizes_2, alpha, beta_1, beta_2,
 
 def optimize_nn(data, targets):
 
-    def nn_crossval(hidden_layer_sizes_1, hidden_layer_sizes_2,
-                    alpha, beta_1, beta_2):
-
-        alpha = 1/(pow(10,alpha))
-        beta_1 = beta_1 / 10
-        beta_2 = beta_2 / 100
+    def nn_crossval(hidden_layer_sizes_1, hidden_layer_sizes_2):
 
         return nn_cv(int(hidden_layer_sizes_1),
                      int(hidden_layer_sizes_2),
-                     alpha=alpha,
-                     beta_1=beta_1,
-                     beta_2=0.1,
                      data=data, targets=targets)
 
     optimizer = BayesianOptimization(
             f=nn_crossval,
             pbounds={
-             "hidden_layer_sizes_1": (20, 1000),
-             "hidden_layer_sizes_2": (20, 1000),
-             "alpha": (1, 4),
-             "beta_1": (1, 9),
-             "beta_2": (10, 99)},
+             "hidden_layer_sizes_1": (20, 800),
+             "hidden_layer_sizes_2": (20, 800)},
             random_state=41,
             verbose=2
     )
 
-    load_logs(optimizer, logs=["./../datos/results/nn_f1_macro.json"])
+    optimizer.probe(
+        params={"hidden_layer_sizes_1": 540,
+                "hidden_layer_sizes_2": 280},
+        lazy=True,
+        )
 
-    logger = JSONLogger(path="./../datos/results/nn_f1_macro_log.json")
+    #load_logs(optimizer, logs=["./Results/nn_f1_macro.json"])
+
+    logger = JSONLogger(path="./Results/nn_f1_macro_try_log.json")
 
     optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 
-    optimizer.maximize(n_iter=20, init_points=10)
+    optimizer.maximize(n_iter=0, init_points=0)
 
     print("Final result:", optimizer.max)
 
@@ -92,11 +83,12 @@ def rfc_cv(n_estimators, min_samples_split, data, targets):
     # Estimador del Random Forest
     estimator = OneVsRestClassifier(RFC(
         n_estimators=n_estimators,
+
         min_samples_split=min_samples_split,
-        n_jobs=-1,
+        n_jobs=8,
         random_state=42), n_jobs=-1)
 
-    skf = StratifiedKFold(n_splits=4)
+    skf = StratifiedKFold(n_splits=-1)
 
     # Cross validation not neg_log_loss
     cval = cross_val_score(estimator, data, targets,
@@ -120,7 +112,6 @@ def optimize_rfc(data, targets):
         return rfc_cv(
             n_estimators=int(n_estimators),
             min_samples_split=int(min_samples_split),
-
             data=data,
             targets=targets,
         )
@@ -128,23 +119,22 @@ def optimize_rfc(data, targets):
     optimizer = BayesianOptimization(
         f=rfc_crossval,
         pbounds={
-            "n_estimators": (600, 800),
+            "n_estimators": (600, 1300),
             "min_samples_split": (2, 150),
-
         },
         random_state=41,
         verbose=2
     )
 
     optimizer.probe(
-        params={"n_estimators": 750,
-                "min_samples_split": 2},
+        params={"n_estimators": 990,
+                "min_samples_split": 60},
         lazy=True,
         )
 
-    # load_logs(optimizer, logs=["./../datos/results/rf_ovr_f1_final.json"])
+    load_logs(optimizer, logs=["./Results/rf_ovr_f1_final.json"])
 
-    logger = JSONLogger(path="./../datos/results/rf_ovr_f1_final_log.json")
+    logger = JSONLogger(path="./Results/rf_ovr_f1_final_log.json")
 
     optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 
@@ -195,13 +185,30 @@ def optimize_svc(data, targets):
         random_state=42,
         verbose=2
     )
+    
+    optimizer.probe(
+        params={"expC": 30,
+                "expGamma": 2},
+        lazy=True,
+        )
+    
+    optimizer.probe(
+        params={"expC": 10,
+                "expGamma": 0},
+        lazy=True,
+        )
+    
+    optimizer.probe(
+        params={"expC": 28,
+                "expGamma": -10},
+        lazy=True,
+        )
+    #load_logs(optimizer, logs=["./Results/svc_f1_macro.json"])
 
-    load_logs(optimizer, logs=["./../datos/results/svc_f1_macro.json"])
-
-    logger = JSONLogger(path="./../datos/results/svc_f1_macro_log.json")
+    logger = JSONLogger(path="./Results/svm_ovr_f1_final_log.json")
 
     optimizer.subscribe(Events.OPTIMIZATION_STEP, logger)
 
-    optimizer.maximize(n_iter=10, init_points=10)
+    optimizer.maximize(n_iter=0, init_points=0)
 
     print("Final result:", optimizer.max)

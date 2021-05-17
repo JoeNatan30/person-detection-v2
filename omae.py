@@ -20,7 +20,7 @@ def name():
 ###############################################################################
 
 
-def showTricontour(results, x, y, xlim, ylim, nameX, nameY):
+def showTricontour(results, x, y, xlim, ylim, nameX, nameY, modelName):
 
     fig, ax = plt.subplots(1, 1)
 
@@ -34,7 +34,7 @@ def showTricontour(results, x, y, xlim, ylim, nameX, nameY):
     plt.xlabel(nameX)
     plt.ylabel(nameY)
     ax.set(xlim=xlim, ylim=ylim)
-    ax.set_title('Estimador F1')
+    ax.set_title("Estimador F1 (%s)" % modelName)
 
     plt.subplots_adjust(hspace=0.5)
     plt.show()
@@ -45,7 +45,7 @@ def randomForestInfo():
 
     data = []
 
-    for line in open('../datos/results/rf_ovr_f1_final.json', 'r'):
+    for line in open('./results/rf_ovr_f1_final.json', 'r'):
         data.append(json.loads(line))
 
     results = []
@@ -59,7 +59,7 @@ def randomForestInfo():
             if(params[0] == 'n_estimators'):
                 x = params[1]
                 n_estimators.append(params[1])
-                neL = (50, 800)
+                neL = (50, 1000)
 
             if(params[0] == 'min_samples_split'):
                 z = params[1]
@@ -75,7 +75,10 @@ def randomForestInfo():
         results.append(rslt['target'])
 
 #    showTricontour(results, n_estimators, max_features, neL, mfL, "Estimadores", "Características máximas")
-    showTricontour(results, n_estimators, min_samples_split, neL, mssL, "Estimadores", "División mímima de la muestra")
+    showTricontour(results, n_estimators, min_samples_split,
+                   neL, mssL,
+                   "N° de estimadores", "División mímima de la muestra",
+                   "Bosque aleatorios")
 #    showTricontour(results, min_samples_split, max_features, mssL, mfL, "División mímima de la muestra", "Características máximas")
 
 
@@ -83,7 +86,7 @@ def SVMInfo():
 
     data = []
 
-    for line in open('../datos/results/f1_macro/svc_f1_macro.json', 'r'):
+    for line in open('./results/f1_macro/svc_f1_macro.json', 'r'):
         data.append(json.loads(line))
 
     results = []
@@ -94,71 +97,54 @@ def SVMInfo():
 
         for params in rslt['params'].items():
             if(params[0] == 'expC'):
-                x = params[1]
+                x = 2 ** params[1]
                 expC.append(params[1])
-                ecL = (-5, 3)
+                ecL = (-5, 30)
 
             if(params[0] == 'expGamma'):
-                y = params[1]
+                y = 2 ** params[1]
                 expGamma.append(params[1])
-                egL = (-15, 3)
+                egL = (-15, 4)
 
         results.append(rslt['target'])
 
-    showTricontour(results, expC, expGamma, ecL, egL, "exp C", "exp Gamma")
+    showTricontour(results, expC, expGamma,
+                   ecL, egL, 
+                   "exp C", "exp Gamma", 
+                   "SVM")
 
 
 def NeuralNetworkInfo():
     
     data = []
 
-    for line in open('../datos/results/f1_macro/nn_f1_macro.json', 'r'):
+    for line in open('./results/f1_macro/nn_f1_macro_log.json', 'r'):
         data.append(json.loads(line))
 
     results = []
-    alpha = []
-    beta_1 = []
-    beta_2 = []
     hidden_layer_sizes_1 = []
     hidden_layer_sizes_2 = []
-
     for rslt in data:
 
         for params in rslt['params'].items():
-            if(params[0] == 'alpha'):
-                a = params[1]
-                alpha.append(params[1])
-                aL = (1, 4)
-
-            if(params[0] == 'beta_1'):
-                b = params[1]
-                beta_1.append(params[1])
-                b1L = (1,9)
-
-            if(params[0] == 'beta_2'):
-                c = params[1]
-                beta_2.append(params[1])
-                b2L = (10, 99)
 
             if(params[0] == 'hidden_layer_sizes_1'):
                 d = params[1]
                 hidden_layer_sizes_1.append(params[1])
-                hls1L = (20, 1000)
+                hls1L = (20, 716)
 
             if(params[0] == 'hidden_layer_sizes_2'):
                 e = params[1]
                 hidden_layer_sizes_2.append(params[1])
-                hls2L = (20, 1000)
+                hls2L = (20, 715)
 
         results.append(rslt['target'])
 
-    showTricontour(results, hidden_layer_sizes_1, hidden_layer_sizes_2, hls1L, hls2L, "Númreo de nn escondidas 1", "Númreo de nn escondidas 2")
-    showTricontour(results, beta_1, beta_2, b1L, b2L, "beta 1", "beta 2")
-    showTricontour(results, alpha, hidden_layer_sizes_2, aL, hls2L, "alpha", "Númreo de nn escondidas 2")
-    showTricontour(results, alpha, hidden_layer_sizes_1, aL, hls1L, "alpha", "Númreo de nn escondidas 1")
-    showTricontour(results, alpha, beta_1, aL, b1L, "alpha", "beta 1")
-    showTricontour(results, alpha, beta_2, aL, b2L, "alpha", "beta 2")
+    showTricontour(results, hidden_layer_sizes_1, hidden_layer_sizes_2,
+                   hls1L, hls2L,
+                   "N° de neuronas escondidas 1", "N° de neuronas escondidas 2",
+                   "Redes neuronales")
     
-# SVMInfo()
-# NeuralNetworkInfo()
-randomForestInfo()
+SVMInfo()
+#NeuralNetworkInfo()
+#randomForestInfo()

@@ -8,10 +8,10 @@ def entrenamiento(cant_PCD,porcentaje):
     dataset_x = []
     dataset_y = []
     
-    dtp = pd.read_pickle("./../datos/dataset/dataTrainX.pkl")
+    dtp = pd.read_pickle("./dataset/dataTrainX.pkl")
     dataset_x = dtp['dataTrainX']
  
-    dtp = pd.read_pickle("./../datos/dataset/dataTrainY.pkl")
+    dtp = pd.read_pickle("./dataset/dataTrainY.pkl")
     dataset_y = dtp['dataTrainY']
 
     #conversion a numpy array
@@ -29,10 +29,10 @@ def prueba(cant_PCD, porcentaje):
     dataset_x = []
     dataset_y = []
 
-    dtp = pd.read_pickle("./../datos/dataset/dataTestX.pkl")
+    dtp = pd.read_pickle("./dataset/dataTestX.pkl")
     dataset_x = dtp['dataTestX']
 
-    dtp = pd.read_pickle("./../datos/dataset/dataTestY.pkl")
+    dtp = pd.read_pickle("./dataset/dataTestY.pkl")
     dataset_y = dtp['dataTestY']
 
     # conversion a numpy array
