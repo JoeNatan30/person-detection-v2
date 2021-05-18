@@ -112,27 +112,27 @@ def fpfh(pcd_down, max_nn=100, radius=5):
         o3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn))
 
 def fixNormalDirectionInPCD(pcd):
-    
+
     normals = np.asarray(pcd.normals)
     points = np.asarray(pcd.points)
-    
+
     long = len(normals)
-    
+
     for pos in range(long):
         suma = 0
         # Punto is used because it's known the viewPoint as (0,0,0)
         vector_view_punto = -1 * points[pos]
-    
+
         for coord in range(3):
             suma = suma + (normals[pos][coord] * vector_view_punto[coord])
-    
+
         if suma >= 0:
             normals[pos] = normals[pos]
         else:
             normals[pos] = -1*normals[pos]
-    
+
     pcd.normals = o3d.utility.Vector3dVector(normals)
-    
+
     return pcd
 
 def showNormals(pcd):

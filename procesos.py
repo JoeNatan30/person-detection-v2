@@ -225,7 +225,7 @@ def procesamiento_real(cant_PCD, porcentaje, tamano, version,
                 print("///////////////////////\nHistogram")
             pc_seg, kdtree_seg, pcdSize = KdtreeStructure.getKdtreeFromPointCloudDir('./../datos/segmentado/segmentado_%d.pcd'%pos)
             fpfh_list = histograma(pc_seg, kdtree_seg, tamano, verbose)
-            
+
             # Descriptor
             if(verbose):
                 print("///////////////////////\nDescriptor")
@@ -333,7 +333,7 @@ def prueba(cant, porcentaje, algoritmo, verbose):
         RandomForest.predecir(data_x, data_y)
         print("fin prediccion Random Forest", ("--- %s seconds ---" %
                                                (time.time() - start_time)))
-
+    
 
 ###############################################################################
 def medition(cant_PCD, tamano_conjunto, version,

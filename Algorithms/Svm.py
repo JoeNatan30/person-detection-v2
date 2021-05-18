@@ -51,7 +51,7 @@ def inicio_ejemplo(var):
         print ("modelo pkl")
         modelo_filename = 'modelo_prueba.pkl'
         clf = joblib.load(modelo_filename)
-        
+
         print (clf.predict([[2.0, 3, 2.0, 3],
                            [0.58, 3, 0.76, 6.],
                            [10.58, 6, 10.76, 3]]))
@@ -71,7 +71,7 @@ def entrenar(X, y): #dataset_train, resultados, dataset_realdataset_real
 
     expC = 30
     expGamma = 2
-        
+
     svm_rbf = OneVsRestClassifier(svm.SVC(kernel='rbf', verbose=1, probability=True,
                                           C=2**expC, gamma=2**expGamma),
                                   n_jobs=-1)
@@ -112,7 +112,6 @@ def predecir(X_test, y_test):
     recall = dict()
     plt.figure(figsize=(8,5.5))
     average_precision = dict()
-    
 
     for i in range(n_classes):
         # ROC curve
@@ -137,6 +136,7 @@ def predecir(X_test, y_test):
     plot_confusion_matrix(svm_rbf, X_test, y_true,
                           cmap=plt.cm.Blues,
                           display_labels=class_names)
+
     plt.title("SVM\nMatriz de confusión")
     plt.ylabel("Categoría verdadera")
     plt.xlabel("Categoría predecida")
@@ -172,4 +172,3 @@ def predecir(X_test, y_test):
     plt.title('SVM\nCurva ROC')
     plt.legend(loc="best")
     plt.show()
-    

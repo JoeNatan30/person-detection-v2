@@ -4,13 +4,16 @@ Created on Fri Mar 26 18:17:12 2021
 
 @author: Joe
 """
-
+import joblib
 import json
 import numpy as np
 import pandas as pd
 import matplotlib.tri as tri
 import matplotlib.pyplot as plt
-
+import open3d as o3d
+from NoiseReduction import KdtreeStructure
+from Characterization import Fpfh
+from random import randint
 
 def name():
     dtp = pd.read_pickle("./../datos/dataset/dataTrainX.pkl")
@@ -144,7 +147,92 @@ def NeuralNetworkInfo():
                    hls1L, hls2L,
                    "N° de neuronas escondidas 1", "N° de neuronas escondidas 2",
                    "Redes neuronales")
+
+def errasePointInPcd(points, posList):
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+    return pcd.select_by_index(posList, invert=True)
+
+def getKdtreeFromPointCloud(pcd):
+
+    return o3d.geometry.KDTreeFlann(pcd)
+
+def showPoints(pcd):
+    o3d.visualization.draw_geometries([pcd],
+                                      zoom=0.1,
+                                      front=[0, 0, 1],
+                                      lookat=[0, 0, 0],
+                                      up=[0, 1, 0])
+
+def histograma(pc, kdtree, tamano, verbose):
+
+    if(verbose):
+        print("Fpfh.inicio")
+    list_fpfh_point = Fpfh.inicio(pc, kdtree, tamano, verbose)
+
+    return list_fpfh_point
+
+def PruebaReal():
     
-SVMInfo()
+    pc_seg, kdtree_seg, pcdSize = KdtreeStructure.getKdtreeFromPointCloudDir(
+        './../segmentado_2680.pcd')
+    
+    pcArrRetrieved = []
+    fpfh_list_retrieved = []
+    
+    segmentSize = 800
+    
+    repetitions = int(pcdSize/segmentSize)
+    print("## %d ##" % repetitions)
+    for _ in range(repetitions):
+        print(_)
+        #Actual structure with data
+        pcArr = np.asarray(pc_seg.points)
+        kdtree_seg = getKdtreeFromPointCloud(pc_seg)
+        
+        # get nearPoints
+        pos = randint(0, len(pcArr - 1))
+        point = pcArr[pos,:]
+
+        _, nearPoint, d = kdtree_seg.search_knn_vector_3d(point, segmentSize)
+
+        # results
+        fpfh_list = histograma(pc_seg, kdtree_seg, segmentSize, False)
+
+        # preparing new structure and data
+        pc_seg = errasePointInPcd(pc_seg.points, nearPoint)
+
+        #Retrieved info
+        pcArrRetrieved.append([pcArr[val] for val in nearPoint])
+        fpfh_list_retrieved.append(fpfh_list[pos])
+
+    #print(pcArrRetrieved)
+    #print(np.asarray(fpfh_list_retrieved))
+    #print([len(val) for val in fpfh_list_retrieved])
+    
+    modelo_filename = './Results/nn_final.pkl'
+    mpl = joblib.load(modelo_filename)
+    y_pred = mpl.predict(np.asarray(fpfh_list_retrieved))
+    
+    print(y_pred)
+
+    color = [[255, 0, 0],[255, 255, 0], [0, 255, 0], [0, 0, 255]]
+
+    newPcArr = []
+    pcColor = []
+    for ind, pointList in enumerate(pcArrRetrieved):
+        for point in pointList:
+            newPcArr.append(point)
+            pcColor.append(color[y_pred[ind]])
+    
+    newPcArr = np.asarray(newPcArr)
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(newPcArr)
+    pcd.colors = o3d.utility.Vector3dVector(pcColor)
+
+    showPoints(pcd)
+    
+PruebaReal()
+#SVMInfo()
 #NeuralNetworkInfo()
 #randomForestInfo()

@@ -219,23 +219,23 @@ def inicio(pcd, kdtree, tamano, verbose):
     # puntos (salen 2 normales menos al valor indicado en cantidad)
     quantity = 120
     cantidad_fpfh = tamano
-    radious = 7
+    radious = 5
 
     if (verbose):
         print("normal.getNormalDirection")
 
     pcdNb = FpfhUtils.getEstimatedNormals(pcd, quantity)
-    
+
     pcdN = FpfhUtils.fixNormalDirectionInPCD(pcdNb)
-        
+
     #FpfhUtils.showNormals(pcdN)
     #pcdN = normal.getNormalDirection(pcd, kdtree, cantidad)
 
     normalArr = np.asarray(pcdN.normals)
     pointArr = np.asarray(pcdN.points)
 
-    point_fpfh = FpfhUtils.fpfh(pcd,cantidad_fpfh, radious)
-    
+    point_fpfh = FpfhUtils.fpfh(pcd, cantidad_fpfh, radious)
+
     localfeature = point_fpfh.data
 
     #for val in fpfhArr.T:
